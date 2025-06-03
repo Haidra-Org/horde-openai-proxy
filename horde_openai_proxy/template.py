@@ -19,8 +19,8 @@ def get_tokenizer(model: str) -> PreTrainedTokenizerBase:
     data = BASE_MODELS[model]
     tokenizer = AutoTokenizer.from_pretrained(data["model"], trust_remote_code=True)
     template_path = os.path.join(
-        os.path.dirname(__file__),
-        f"./chat_templates/chat_templates/{data['template']}.jinja",
+        os.path.dirname(os.getenv("CHAT_TEMPLATES_DIR", "./chat_templates")),
+        f"chat_templates/{data['template']}.jinja",
     )
     template = open(template_path).read()
     template = template.replace("    ", "").replace("\n", "")
@@ -43,8 +43,8 @@ def get_generation_config(model: str) -> GenerationConfig:
     """
     if BASE_MODELS[model]["config"]:
         config_path = os.path.join(
-            os.path.dirname(__file__),
-            f"./chat_templates/generation_configs/{BASE_MODELS[model]['config']}.json",
+            os.path.dirname(os.getenv("CHAT_TEMPLATES_DIR", "./chat_templates")),
+            f"generation_configs/{BASE_MODELS[model]['config']}.json",
         )
 
         with open(config_path) as f:

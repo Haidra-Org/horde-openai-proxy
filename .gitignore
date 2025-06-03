@@ -5,3 +5,6 @@
 reports
 
 bridge_config.yaml
+chat_templates
+venv
+__pycache__

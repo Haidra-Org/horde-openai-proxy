@@ -1,6 +1,6 @@
 import time
 from typing import List
-
+from loguru import logger
 from .model import get_models
 from .template import apply_template, get_generation_config, prompt_to_messages
 from .types import (

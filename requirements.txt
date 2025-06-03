@@ -1,0 +1,6 @@
+fastapi[standard]
+huggingface_hub
+dotenv
+cachetools
+transformers
+loguru

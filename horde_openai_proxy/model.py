@@ -6,6 +6,8 @@ from cachetools import TTLCache, cached
 
 from .data import MODEL_SIZES, MODEL_TO_BASE_MODEL, BASE_MODELS
 from .horde import get_horde_models
+from loguru import logger
+
 
 QUANTS = {
     "q2_k",
@@ -72,7 +74,7 @@ def estimate_size(name: str) -> float:
                     return float(s[:-1])
                 except ValueError:
                     pass
-    print(f"Unknown size: {name}")
+    logger.warning(f"Unknown size: {name}")
     return 0
 
 
@@ -97,6 +99,7 @@ class Model:
     quant: str
     size: float
     known_to_horde: bool
+    worker_threads: int = 1
 
 
 @cached(TTLCache(maxsize=1, ttl=86400))
@@ -129,18 +132,19 @@ def get_models() -> dict[str, Model]:
             )
 
             if base_model is None:
-                print(f"Unknown model: {clean_name} ({name}), ignoring.")
-            else:
-                models[name] = Model(
-                    name=name,
-                    clean_name=clean_name,
-                    base_model=base_model,
-                    template=template,
-                    backend=backend,
-                    quant=estimate_quant(name),
-                    size="parameters" in reference
-                    and reference["parameters"] / 10**9
-                    or estimate_size(name),
-                    known_to_horde="name" in reference,
-                )
+                # logger.warning(f"Unknown model: {clean_name} ({name}).")
+                base_model = "unknown"
+            models[name] = Model(
+                name=name,
+                clean_name=clean_name,
+                base_model=base_model,
+                template=template,
+                backend=backend,
+                quant=estimate_quant(name),
+                size="parameters" in reference
+                and reference["parameters"] / 10**9
+                or estimate_size(name),
+                known_to_horde="name" in reference,
+                worker_threads=model.get("count", 1),
+            )
     return models
