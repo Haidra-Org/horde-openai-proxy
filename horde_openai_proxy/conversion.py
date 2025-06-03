@@ -9,6 +9,8 @@ from .types import (
     ModelGenerationInput,
     TextGeneration,
     ChatCompletionResponse,
+    ModelResponseRequest,
+    ModelResponse
 )
 
 
@@ -39,8 +41,25 @@ def openai_to_horde(
                 get_generation_config(models[model_name].base_model).stop_words
             )
 
+def openai_to_horde_model_response(
+    request: ModelResponseRequest,
+    max_context_length: int = 2048,
+) -> HordeRequest:
+    """
+    Convert an OpenAI model response request to a Horde request.
+
+    :param request: The OpenAI request
+    :param max_context_length: The maximum context length (not applicable to OpenAI and thus a constant)
+    :return: The Horde request
+    """
+    model_names = [m.strip() for m in request.model.split(",")]
+    models = get_models()
+    primary_model = model_names[0]
+    if primary_model not in models:
+        raise ValueError(f"Model {primary_model} not known!")
+
     return HordeRequest(
-        prompt=apply_template(request.messages, base_model),
+        prompt=request.input,
         models=model_names,
         timeout=300 if request.timeout is None else int(request.timeout),
         params=ModelGenerationInput(
@@ -48,8 +67,6 @@ def openai_to_horde(
             max_length=request.max_tokens,
             n=request.n,
             rep_pen=request.frequency_penalty,
-            stop_sequence=([] if request.stop is None else request.stop)
-            + list(all_stops),
             temperature=request.temperature,
             top_p=request.top_p,
         ),
@@ -112,6 +129,35 @@ def completions_to_openai_response(
             for index, completion in enumerate(completions)
         ],
         created=int(time.time()),
+        model=completions[0].model,
+        usage={
+            "kudos": completions[0].kudos,
+        },
+    )
+
+def horde_response_to_openai_model_response(
+    completions: List[TextGeneration],
+) -> ModelResponse:
+    """
+    Convert a list of horde responses to an OpenAI model response.
+    :param completions: List of completions
+    :return: OpenAI response
+    """
+    return ModelResponse(
+        id=completions[0].uuid,
+        output=[
+            {
+                "id": index,
+                "type": "message",
+                "status": "completed",
+                "role": "assistant",
+                "content": [
+                    {"type": "output_text", "text": completion.text, "annotations": []}
+                ],
+            }
+            for index, completion in enumerate(completions)
+        ],
+        created_at=int(time.time()),
         model=completions[0].model,
         usage={
             "kudos": completions[0].kudos,

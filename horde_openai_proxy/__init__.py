@@ -12,9 +12,13 @@ __all__ = [
     "ChatCompletionRequest",
     "HordeRequest",
     "ChatCompletionResponse",
+    "ModelResponseRequest",
+    "ModelResponse",
     "get_horde_models",
     "ModelGenerationInput",
     "filter_models",
+    "openai_to_horde_model_response",
+    "horde_response_to_openai_model_response",
 ]
 
 import os
@@ -22,17 +26,20 @@ import os
 import huggingface_hub
 from dotenv import load_dotenv
 
-from .conversion import completions_to_openai_response, horde_to_openai, openai_to_horde
+from .conversion import completions_to_openai_response, horde_to_openai, openai_to_horde, openai_to_horde_model_response, horde_response_to_openai_model_response
 from .horde import TextGeneration, get_horde_completion, get_horde_models
 from .model import Model, get_models
 from .template import (
     GenerationConfig,
     apply_template,
     get_generation_config,
+    
 )
 from .types import (
     ChatCompletionRequest,
     ChatCompletionResponse,
+    ModelResponseRequest,
+    ModelResponse,
     HordeRequest,
     ModelGenerationInput,
 )

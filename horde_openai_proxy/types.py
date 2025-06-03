@@ -30,6 +30,33 @@ class ChatCompletionResponse(BaseModel):
     usage: dict
 
 
+class ModelResponseRequest(BaseModel):
+    """An OpenAI Model Response request."""
+
+    model_config = {"extra": "ignore"}
+
+    input: str
+    model: str
+    frequency_penalty: Optional[float] = Field(None)
+    presence_penalty: Optional[float] = Field(None)
+    max_tokens: Optional[int] = Field(None)
+    n: Optional[int] = Field(None)
+    stop: List[str] = Field(None)
+    temperature: Optional[float] = Field(None)
+    top_p: Optional[float] = Field(None)
+    timeout: Union[float, None] = Field(None)
+
+
+class ModelResponse(BaseModel):
+    """An OpenAI model response."""
+
+    id: str
+    output: list[dict]
+    created_at: int
+    model: str
+    usage: dict
+
+
 class ModelGenerationInput(BaseModel):
     """A (partial) KoboldAI generation input."""
 

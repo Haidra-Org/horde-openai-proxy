@@ -7,10 +7,14 @@ from fastapi import Header
 from horde_openai_proxy import (
     ChatCompletionRequest,
     ChatCompletionResponse,
+    ModelResponseRequest,
+    ModelResponse,
     Model,
     get_horde_completion,
     openai_to_horde,
+    openai_to_horde_model_response,
     completions_to_openai_response,
+    horde_response_to_openai_model_response,
     filter_models,
 )
 
@@ -59,3 +63,23 @@ def post_chat_completion(
         raise HTTPException(status_code=406, detail=str(e))
 
     return completions_to_openai_response(completions)
+
+@app.post("/v1/responses")
+def post_chat_completion(
+    request: Request,
+    body: ModelResponseRequest,
+    authorization:  Annotated[str | None, Header()] = None,
+) -> ModelResponse:
+    logger.debug(authorization)
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Authorization header missing")
+    token = authorization.lstrip("Bearer ")
+    if not token:
+        raise HTTPException(status_code=401, detail="Authorization token missing")
+    try:
+        horde_request = openai_to_horde_model_response(body)
+        completions = get_horde_completion(token, horde_request)
+    except ValueError as e:
+        raise HTTPException(status_code=406, detail=str(e))
+
+    return horde_response_to_openai_model_response(completions)
