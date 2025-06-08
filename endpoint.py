@@ -21,6 +21,13 @@ from horde_openai_proxy import (
 app = FastAPI()
 
 
+app.add_middleware(
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
 @app.get("/v1/models")
 def get_chat_models(
     names: str = "",
