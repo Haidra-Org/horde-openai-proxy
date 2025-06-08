@@ -21,7 +21,7 @@ from horde_openai_proxy import (
 app = FastAPI()
 
 
-@app.get("/v1/chat/models")
+@app.get("/v1/models")
 def get_chat_models(
     names: str = "",
     clean_names: str = "",
