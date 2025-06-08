@@ -91,6 +91,7 @@ def guess_base_model(name: str) -> Optional[str]:
 
 @dataclass
 class Model:
+    id: str
     name: str
     clean_name: str
     base_model: str
@@ -121,6 +122,7 @@ def get_models() -> dict[str, Model]:
     for model in get_horde_models():
         name = model["name"]
         if "/" in name:
+            model_id = name
             reference = references.get(name, {})
             backend = name.split("/", 1)[0].strip()
             clean_name = estimate_clean_name(name).strip()
@@ -135,6 +137,7 @@ def get_models() -> dict[str, Model]:
                 # logger.warning(f"Unknown model: {clean_name} ({name}).")
                 base_model = "unknown"
             models[name] = Model(
+                id=model_id,
                 name=name,
                 clean_name=clean_name,
                 base_model=base_model,
