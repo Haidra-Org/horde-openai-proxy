@@ -40,6 +40,21 @@ def openai_to_horde(
             all_stops.update(
                 get_generation_config(models[model_name].base_model).stop_words
             )
+    return HordeRequest(
+        prompt=apply_template(request.messages, base_model),
+        models=model_names,
+        timeout=300 if request.timeout is None else int(request.timeout),
+        params=ModelGenerationInput(
+            max_context_length=max_context_length,
+            max_length=request.max_tokens,
+            n=request.n,
+            rep_pen=request.frequency_penalty,
+            stop_sequence=([] if request.stop is None else request.stop)
+            + list(all_stops),
+            temperature=request.temperature,
+            top_p=request.top_p,
+        ),
+    )
 
 def openai_to_horde_model_response(
     request: ModelResponseRequest,
