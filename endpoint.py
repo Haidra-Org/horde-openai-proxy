@@ -17,16 +17,18 @@ from horde_openai_proxy import (
     horde_response_to_openai_model_response,
     filter_models,
 )
+from starlette.middleware.cors import CORSMiddleware # Import CORSMiddleware
 
 app = FastAPI()
 
 
 app.add_middleware(
+    CORSMiddleware, # Add CORSMiddleware as the first argument
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    allow_origins=["*"] # You'll likely want to specify origins, not just allow all
 )
-
 
 @app.get("/v1/models")
 def get_chat_models(
