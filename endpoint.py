@@ -55,29 +55,6 @@ def get_chat_models(
     )}
 
 
-@app.get("/v1/models_full")
-def get_chat_models(
-    names: str = "",
-    clean_names: str = "",
-    base_models: str = "",
-    templates: str = "",
-    min_size: float = 0,
-    max_size: float = -1,
-    quant: str = "",
-    backends: str = "",
-) -> List[Model]:
-    return filter_models(
-        set(n.strip() for n in names.split(",") if n.strip()),
-        set(n.strip() for n in clean_names.split(",") if n.strip()),
-        set(n.strip() for n in base_models.split(",") if n.strip()),
-        set(n.strip() for n in templates.split(",") if n.strip()),
-        set(n.strip() for n in backends.split(",") if n.strip()),
-        set(n.strip() for n in quant.split(",") if n.strip()),
-        min_size=min_size,
-        max_size=max_size,
-    )
-
-
 @app.post("/v1/chat/completions")
 def post_chat_completion(
     request: Request,
