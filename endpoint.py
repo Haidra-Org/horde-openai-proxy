@@ -69,7 +69,6 @@ def post_chat_completion(
         raise HTTPException(status_code=401, detail="Authorization token missing")
     try:
         horde_request = openai_to_horde(body)
-        logger.debug(horde_request)
         completions = get_horde_completion(token, horde_request)
     except ValueError as e:
         raise HTTPException(status_code=406, detail=str(e))

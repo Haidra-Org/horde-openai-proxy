@@ -130,12 +130,12 @@ def get_models() -> dict[str, Model]:
             template = (
                 BASE_MODELS[base_model]["template"]
                 if base_model in BASE_MODELS
-                else "alpaca"
+                else "unknown"
             )
 
             if base_model is None:
                 # logger.warning(f"Unknown model: {clean_name} ({name}).")
-                base_model = "alpaca"
+                continue
             models[name] = Model(
                 id=model_id,
                 name=name,
