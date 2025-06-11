@@ -3,29 +3,14 @@ import os
 from dataclasses import dataclass
 from functools import cache
 from typing import Optional
-
-from transformers import PreTrainedTokenizerBase, AutoTokenizer
-
+from jinja2.sandbox import ImmutableSandboxedEnvironment
+from loguru import logger
+import requests
 from .data import BASE_MODELS
+from .model import get_models
 
-
-@cache
-def get_tokenizer(model: str) -> PreTrainedTokenizerBase:
-    """
-    Get the adjusted tokenizer for the model.
-    :param model: Model name
-    :return: Tokenizer
-    """
-    data = BASE_MODELS[model]
-    tokenizer = AutoTokenizer.from_pretrained(data["model"], trust_remote_code=True)
-    template_path = os.path.join(
-        os.path.dirname(os.getenv("CHAT_TEMPLATES_DIR", "./chat_templates")),
-        f"chat_templates/{data['template']}.jinja",
-    )
-    template = open(template_path).read()
-    template = template.replace("    ", "").replace("\n", "")
-    tokenizer.chat_template = template
-    return tokenizer
+jinja_env = ImmutableSandboxedEnvironment(trim_blocks=True,
+                                          lstrip_blocks=True)
 
 
 @dataclass
@@ -33,39 +18,42 @@ class GenerationConfig:
     system_prompt: Optional[str]
     stop_words: list[str]
 
-
 @cache
-def get_generation_config(model: str) -> GenerationConfig:
-    """
-    Get the generation config for the model, such as stop words.
-    :param model: Model name
-    :return: GenerationConfig
-    """
-    if BASE_MODELS[model]["config"]:
-        config_path = os.path.join(
-            os.path.dirname(os.getenv("CHAT_TEMPLATES_DIR", "./chat_templates")),
-            f"generation_configs/{BASE_MODELS[model]['config']}.json",
-        )
+@logger.catch(reraise=True)
+def get_tokenizer_config(model_name: str) -> dict:
+    config_dir = os.getenv("TOKENIZERS_CONFIG_DIR", "tokenizer_configs")
+    os.makedirs(config_dir, exist_ok=True)
+    config_path = os.path.join(config_dir, f"{model_name.replace('/','__')}.json")
+    tokenizer_config = None
 
-        with open(config_path) as f:
-            config = json.load(f)
+    if not os.path.exists(config_path):
+        known_models = get_models()
+        url = known_models[model_name].url
+        logger.info(f"Fetching tokenizer config for {model_name} from {url}")
+        try:
+            headers = {}
+            hf_token = os.getenv("HF_TOKEN")
+            if hf_token:
+                headers["Authorization"] = f"Bearer {hf_token}"
+            logger.debug(headers)
+            resp = requests.get(url, timeout=10, headers=headers)
+            resp.raise_for_status()
+            logger.debug(config_path)
+            with open(config_path, "w", encoding="utf-8") as f:
+                f.write(resp.text)
+            tokenizer_config = resp.json()
+        except Exception as e:
+            logger.warning(f"Could not fetch tokenizer config for {model_name}: {e}")
+            tokenizer_config = {}
     else:
-        config = {"stop_str": None, "stop_token_ids": [], "system_prompt": None}
-
-    stop_words: list[str] = []
-
-    if config["stop_str"]:
-        stop_words.append(str(config["stop_str"]))
-
-    if config["stop_token_ids"]:
-        tokenizer = get_tokenizer(model)
-        for token_id in config["stop_token_ids"]:
-            stop_words.append(tokenizer.decode(token_id))
-
-    return GenerationConfig(
-        system_prompt=config["system_prompt"],
-        stop_words=stop_words,
-    )
+        try:
+            with open(config_path, "r", encoding="utf-8") as f:
+                tokenizer_config = json.load(f)
+        except Exception as err:
+            raise ValueError(
+                f"Could not read tokenizer config for {model_name}: {err}"
+            )
+    return tokenizer_config
 
 
 def apply_template(conversation: list, model: str) -> str:
@@ -75,17 +63,14 @@ def apply_template(conversation: list, model: str) -> str:
     :param model: Model name on Hugging Face
     :return: Prepared prompt
     """
-    if "system" not in {m["role"] for m in conversation}:
-        config = get_generation_config(model)
-        if config.system_prompt:
-            conversation = [
-                {"role": "system", "content": config.system_prompt}
-            ] + conversation
-
-    return str(
-        get_tokenizer(model).apply_chat_template(
-            conversation, tokenize=False, add_generation_prompt=True
-        )
+    tokenizer_config = get_tokenizer_config(model)
+    format_template = tokenizer_config.get('chat_template')
+    jinja_compiled_template = jinja_env.from_string(format_template)
+    return jinja_compiled_template.render(
+        messages=conversation,
+        add_generation_prompt=True,
+        bos_token=tokenizer_config['bos_token'] if tokenizer_config.get('bos_token') else "",
+        eos_token=tokenizer_config['eos_token'] if tokenizer_config.get('eos_token') else "",
     )
 
 

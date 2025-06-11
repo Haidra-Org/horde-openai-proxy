@@ -8,3 +8,4 @@ bridge_config.yaml
 chat_templates
 venv
 __pycache__
+tokenizer_configs

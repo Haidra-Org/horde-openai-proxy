@@ -2,7 +2,7 @@ import time
 from typing import List
 from loguru import logger
 from .model import get_models
-from .template import apply_template, get_generation_config, prompt_to_messages
+from .template import apply_template, prompt_to_messages, get_tokenizer_config
 from .types import (
     ChatCompletionRequest,
     HordeRequest,
@@ -26,22 +26,24 @@ def openai_to_horde(
     :return: The Horde request
     """
     model_names = [m.strip() for m in request.model.split(",")]
-    models = get_models()
-    primary_model = model_names[0]
-    if primary_model not in models:
+    known_models = get_models()
+    primary_model = None
+    for model_name in model_names:
+        if model_name in known_models:
+            primary_model = model_name
+            break
+    if primary_model is None:
         raise ValueError(f"Model {primary_model} not known!")
-    base_model = models[primary_model].base_model
+    base_model = known_models[primary_model].base_model
 
     # Fetch all stop words which may be used
     # One should not mix base_models, but if one does, at least stop works
     all_stops = set()
-    for model_name in model_names:
-        if model_name in models:
-            all_stops.update(
-                get_generation_config(models[model_name].base_model).stop_words
-            )
+    for model_name in model_names:        
+        tokenizer_config = get_tokenizer_config(model_name)
+        # TODO: Set all_stops
     return HordeRequest(
-        prompt=apply_template(request.messages, base_model),
+        prompt=apply_template(request.messages, model_name),
         models=model_names,
         timeout=300 if request.timeout is None else int(request.timeout),
         params=ModelGenerationInput(

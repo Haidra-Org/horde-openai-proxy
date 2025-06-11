@@ -7,7 +7,6 @@ __all__ = [
     "get_models",
     "Model",
     "apply_template",
-    "get_generation_config",
     "GenerationConfig",
     "ChatCompletionRequest",
     "HordeRequest",
@@ -32,7 +31,6 @@ from .model import Model, get_models
 from .template import (
     GenerationConfig,
     apply_template,
-    get_generation_config,
     
 )
 from .types import (

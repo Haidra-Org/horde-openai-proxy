@@ -4,8 +4,8 @@ from typing import List, Optional
 from . import HordeRequest
 from .data import BASE_MODELS
 from .model import get_models, Model
-from .template import get_tokenizer
-
+from .template import get_tokenizer_config
+from loguru import logger
 
 def filter_models(
     names: Optional[set[str]] = None,
@@ -119,8 +119,9 @@ def apply_kobold_formatting_from_payload(text: str, payload: HordeRequest) -> st
 def check_available_base_models():
     """Call to get a list of unavailable base models."""
     for base_model in BASE_MODELS:
+        logger.info(f"Checking availability of base model: {base_model}")
         try:
-            get_tokenizer(base_model)
+            get_tokenizer_config(base_model)
         except Exception as e:
             url = BASE_MODELS[base_model]["model"]
             print(f"Model {base_model} at {url} not available: {e}")

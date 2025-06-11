@@ -51,6 +51,12 @@ def estimate_clean_name(name: str) -> str:
     return "-".join(filtered)
 
 
+def find_similar_reference(name: str) -> str:
+    """Estimate another name which might appear on the reference"""
+    name = name.split("/")[-1]
+    return "-".join(name.split("-")[:2])
+
+
 def estimate_quant(name: str) -> str:
     """Estimate the quantization of a model based on the name."""
     name = name.lower()
@@ -99,6 +105,7 @@ class Model:
     backend: str
     quant: str
     size: float
+    url: str
     known_to_horde: bool
     worker_threads: int = 1
 
@@ -125,7 +132,7 @@ def get_models() -> dict[str, Model]:
             model_id = name
             reference = references.get(name, {})
             backend = name.split("/", 1)[0].strip()
-            clean_name = estimate_clean_name(name).strip()
+            clean_name = estimate_clean_name(name).strip()            
             base_model = guess_base_model(clean_name)
             template = (
                 BASE_MODELS[base_model]["template"]
@@ -134,8 +141,30 @@ def get_models() -> dict[str, Model]:
             )
 
             if base_model is None:
-                # logger.warning(f"Unknown model: {clean_name} ({name}).")
-                continue
+                logger.warning(f"Unknown model: {clean_name} ({name}).")
+                base_model = "unknown"
+            url=reference.get("url")
+            if url:
+                url = url + '/raw/main/tokenizer_config.json'
+            else:
+                purename = None
+                if 'koboldcpp' in name.lower():
+                    purename = name.replace("koboldcpp/", "")
+                elif 'aphrodite' in name.lower():
+                    purename = name.replace("aphrodite/", "")
+                if purename:
+                    for model_name in references:
+                        if not model_name.startswith("koboldcpp/") and not model_name.startswith("aphrodite/") and purename in model_name:
+                            url = f"https://huggingface.co/{model_name}/raw/main/tokenizer_config.json"
+                            break
+                    if not url:
+                        similar_name = find_similar_reference(name)
+                        for model_name in references:
+                            if not model_name.startswith("koboldcpp/") and not model_name.startswith("aphrodite/") and similar_name in model_name.lower():
+                                url = references[model_name].get("url", f"https://huggingface.co/{model_name}/raw/main/tokenizer_config.json")
+                                break
+                else:
+                    url = f"https://huggingface.co/{name}/raw/main/tokenizer_config.json"
             models[name] = Model(
                 id=model_id,
                 name=name,
@@ -144,6 +173,7 @@ def get_models() -> dict[str, Model]:
                 template=template,
                 backend=backend,
                 quant=estimate_quant(name),
+                url=url,
                 size="parameters" in reference
                 and reference["parameters"] / 10**9
                 or estimate_size(name),
