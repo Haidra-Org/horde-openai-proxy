@@ -50,7 +50,7 @@ def openai_to_horde(
             max_context_length=max_context_length,
             max_length=request.max_tokens if request.max_tokens < 1024 else 1024,
             n=request.n,
-            rep_pen=request.frequency_penalty+1,
+            rep_pen=request.frequency_penalty+1 if request.frequency_penalty is not None else 1.0,
             stop_sequence=([] if request.stop is None else request.stop)
             + list(all_stops),
             temperature=request.temperature,
@@ -83,7 +83,7 @@ def openai_to_horde_model_response(
             max_context_length=max_context_length,
             max_length=request.max_tokens if request.max_tokens < 1024 else 1024,
             n=request.n,
-            rep_pen=request.frequency_penalty+1,
+            rep_pen=request.frequency_penalty+1 if request.frequency_penalty is not None else 1.0,
             temperature=request.temperature,
             top_p=request.top_p,
         ),
