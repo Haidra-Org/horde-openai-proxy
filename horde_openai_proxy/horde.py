@@ -61,6 +61,7 @@ def get_horde_completion(
                 "slow_workers": slow_workers,
                 "allow_downgrade": allow_downgrade,
             }
+    logger.debug(body)
     initial_request = get_data(
         requests.post(
             "https://stablehorde.net/api/v2/generate/text/async",
