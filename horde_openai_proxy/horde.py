@@ -80,7 +80,7 @@ def get_horde_completion(
         data = get_data(
             requests.get(f"https://stablehorde.net/api/v2/generate/text/status/{uuid}")
         )
-
+        logger.debug(data)
         if not data["is_possible"]:
             raise ValueError("Request is not possible.")
 
