@@ -75,6 +75,8 @@ def openai_to_horde_model_response(
     if primary_model not in models:
         raise ValueError(f"Model {primary_model} not known!")
 
+    logger.debug(request.frequency_penalty)
+    logger.debug(request.max_tokens)
     return HordeRequest(
         prompt=request.input,
         models=model_names,
