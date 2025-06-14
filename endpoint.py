@@ -92,6 +92,6 @@ def post_chat_completion(
         completions = get_horde_completion(token, horde_request)
     except ValueError as err:
         logger.error(f"Error processing request: {err}")
-        raise HTTPException(status_code=406, detail=str(e))
+        raise HTTPException(status_code=406, detail=str(err))
 
     return horde_response_to_openai_model_response(completions)
