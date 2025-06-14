@@ -4,6 +4,7 @@ from fastapi import FastAPI, HTTPException
 from starlette.requests import Request
 from loguru import logger
 from fastapi import Header
+from fastapi import Response
 from horde_openai_proxy import (
     ChatCompletionRequest,
     ChatCompletionResponse,
@@ -18,6 +19,8 @@ from horde_openai_proxy import (
     filter_models,
 )
 from starlette.middleware.cors import CORSMiddleware # Import CORSMiddleware
+from sse_starlette.sse import EventSourceResponse
+import json
 
 app = FastAPI()
 
@@ -60,7 +63,7 @@ def post_chat_completion(
     request: Request,
     body: ChatCompletionRequest,
     authorization:  Annotated[str | None, Header()] = None,
-) -> ChatCompletionResponse:
+):  # <-- Remove return type annotation
     logger.debug(authorization)
     if not authorization:
         raise HTTPException(status_code=401, detail="Authorization header missing")
@@ -74,10 +77,102 @@ def post_chat_completion(
         logger.error(f"Error processing request: {err}")
         raise HTTPException(status_code=406, detail=str(err))
 
-    return completions_to_openai_response(completions)
+    if body.stream:
+        logger.debug("Faking Streaming response")
+        async def event_generator():
+            import time
+            import json
+
+            openai_response = completions_to_openai_response(completions)
+            if hasattr(openai_response, "model_dump"):
+                gen = openai_response.model_dump()
+            else:
+                gen = openai_response
+
+            now = int(time.time())
+            friendlymodelname = gen.get("model", "unknown")
+            message = gen['choices'][0]['message']
+            content = message.get('content', '')
+
+            # First chunk: send the content
+            content_chunk = json.dumps({
+                "id": gen.get("id", "koboldcpp"),
+                "object": "chat.completion.chunk",
+                "created": now,
+                "model": friendlymodelname,
+                "choices": [{
+                    "index": 0,
+                    "delta": {
+                        "role": "assistant",
+                        "content": content
+                    },
+                    "finish_reason": None
+                }]
+            })
+            yield {"data": content_chunk}
+
+            # Tool calls, if present
+            toolsdata_res = []
+            try:
+                toolsdata_res = message.get('tool_calls', [])
+                if toolsdata_res and len(toolsdata_res) > 0:
+                    toolsdata_res[0]["index"] = 0
+            except Exception:
+                toolsdata_res = []
+
+            if toolsdata_res:
+                toolsdata_p1 = json.dumps({
+                    "id": gen.get("id", "koboldcpp"),
+                    "object": "chat.completion.chunk",
+                    "created": now,
+                    "model": friendlymodelname,
+                    "choices": [{
+                        "index": 0,
+                        "finish_reason": None,
+                        "delta": {
+                            "role": "assistant",
+                            "content": None,
+                            "tool_calls": toolsdata_res
+                        }
+                    }]
+                })
+
+                toolsdata_p2 = json.dumps({
+                    "id": gen.get("id", "koboldcpp"),
+                    "object": "chat.completion.chunk",
+                    "created": now,
+                    "model": friendlymodelname,
+                    "choices": [{
+                        "index": 0,
+                        "finish_reason": "tool_calls",
+                        "delta": {}
+                    }]
+                })
+
+                yield {"data": toolsdata_p1}
+                yield {"data": toolsdata_p2}
+            else:
+                # If no tool calls, send finish_reason
+                done_chunk = json.dumps({
+                    "id": gen.get("id", "koboldcpp"),
+                    "object": "chat.completion.chunk",
+                    "created": now,
+                    "model": friendlymodelname,
+                    "choices": [{
+                        "index": 0,
+                        "finish_reason": "stop",
+                        "delta": {}
+                    }]
+                })
+                yield {"data": done_chunk}
+
+            yield {"data": "[DONE]"}
+        return EventSourceResponse(event_generator())
+    else:
+        return completions_to_openai_response(completions)
 
 @app.post("/v1/responses")
-def post_chat_completion(
+def post_model_response(
     request: Request,
     body: ModelResponseRequest,
     authorization:  Annotated[str | None, Header()] = None,

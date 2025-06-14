@@ -18,6 +18,7 @@ class ChatCompletionRequest(BaseModel):
     temperature: Optional[float] = Field(None)
     top_p: Optional[float] = Field(None)
     timeout: Union[float, None] = Field(None)
+    stream: Optional[bool] = Field(False)
 
 
 class ChatCompletionResponse(BaseModel):
@@ -29,7 +30,7 @@ class ChatCompletionResponse(BaseModel):
     model: str
     usage: dict
     object: str = "chat.completion"
-
+    
 
 class ModelResponseRequest(BaseModel):
     """An OpenAI Model Response request."""
