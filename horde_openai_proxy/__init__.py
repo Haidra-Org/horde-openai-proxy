@@ -44,7 +44,3 @@ from .types import (
 from .utils import filter_models
 
 load_dotenv()
-print('aaaa')
-print(os.getenv("HF_TOKEN"))
-if os.getenv("HF_TOKEN"):
-    huggingface_hub.login(token=os.getenv("HF_TOKEN"))

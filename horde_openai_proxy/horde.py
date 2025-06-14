@@ -3,6 +3,7 @@ from json import JSONDecodeError
 from typing import List
 from loguru import logger
 import requests
+from .consts import VERSION
 
 from .types import HordeRequest, TextGeneration
 
@@ -67,6 +68,7 @@ def get_horde_completion(
             "https://stablehorde.net/api/v2/generate/text/async",
             headers={
                 "apikey": apikey,
+                "Client-Agent": f"horde-openai-proxy:{VERSION}:db0",
             },
             json=body,
         )
@@ -78,7 +80,12 @@ def get_horde_completion(
     initial_time = time.time()
     while time.time() - initial_time < request.timeout:
         data = get_data(
-            requests.get(f"https://stablehorde.net/api/v2/generate/text/status/{uuid}")
+            requests.get(
+                f"https://stablehorde.net/api/v2/generate/text/status/{uuid}",
+                headers={
+                    "Client-Agent": f"horde-openai-proxy:{VERSION}:db0",
+                },
+            )
         )
         logger.debug(data)
         if not data["is_possible"]:
@@ -127,6 +134,9 @@ def get_horde_models() -> List[dict]:
             params={
                 "type": "text",
                 "min_count": 1,
+            },
+            headers={
+                "Client-Agent": f"horde-openai-proxy:{VERSION}:db0",
             },
         )
     )

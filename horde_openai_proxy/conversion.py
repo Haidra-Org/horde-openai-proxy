@@ -12,7 +12,7 @@ from .types import (
     ModelResponseRequest,
     ModelResponse
 )
-
+from .workers import horde_workers
 
 def openai_to_horde(
     request: ChatCompletionRequest,
@@ -42,13 +42,17 @@ def openai_to_horde(
     for model_name in model_names:        
         tokenizer_config = get_tokenizer_config(model_name)
         # TODO: Set all_stops
+    max_available_context_length = horde_workers.get_max_context_length_for_model(primary_model)
+    max_available_tokens = horde_workers.get_max_tokens_for_model(primary_model)
+    if max_available_tokens > 1024:
+        max_available_tokens = 1024
     return HordeRequest(
         prompt=apply_template(request.messages, model_name),
         models=model_names,
         timeout=300 if request.timeout is None else int(request.timeout),
         params=ModelGenerationInput(
-            max_context_length=max_context_length,
-            max_length=request.max_tokens if request.max_tokens < 1024 else 1024,
+            max_context_length=max_context_length if max_context_length <= max_available_context_length else max_available_context_length,
+            max_length=request.max_tokens if request.max_tokens <= max_available_tokens else max_available_tokens,
             n=request.n,
             rep_pen=request.frequency_penalty+1 if request.frequency_penalty is not None else 1.0,
             stop_sequence=([] if request.stop is None else request.stop)
@@ -75,13 +79,15 @@ def openai_to_horde_model_response(
     if primary_model not in models:
         raise ValueError(f"Model {primary_model} not known!")
 
+    max_available_context_length = horde_workers.get_max_context_length_for_model(primary_model)
+    max_available_tokens = horde_workers.get_max_tokens_for_model(primary_model)
     return HordeRequest(
         prompt=request.input,
         models=model_names,
         timeout=300 if request.timeout is None else int(request.timeout),
         params=ModelGenerationInput(
-            max_context_length=max_context_length,
-            max_length=request.max_tokens if request.max_tokens < 1024 else 1024,
+            max_context_length=max_context_length if max_context_length <= max_available_context_length else max_available_context_length,
+            max_length=request.max_tokens if request.max_tokens <= max_available_tokens else max_available_tokens,
             n=request.n,
             rep_pen=request.frequency_penalty+1 if request.frequency_penalty is not None else 1.0,
             temperature=request.temperature,
