@@ -22,6 +22,7 @@ def remove_stop_words(text: str, stop_sequence: List[str]) -> str:
 def get_data(response: requests.Response):
     if response.status_code != 200 and response.status_code != 202:
         try:
+            logger.debug(response.text)
             message = response.json().get("message")
         except (JSONDecodeError, KeyError):
             message = response.status_code
@@ -59,7 +60,7 @@ def get_horde_completion(
                 "slow_workers": slow_workers,
                 "allow_downgrade": allow_downgrade,
             },
-    logger.debug(body)
+    # logger.debug(body)
     initial_request = get_data(
         requests.post(
             "https://stablehorde.net/api/v2/generate/text/async",
