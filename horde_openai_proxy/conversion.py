@@ -48,9 +48,9 @@ def openai_to_horde(
         timeout=300 if request.timeout is None else int(request.timeout),
         params=ModelGenerationInput(
             max_context_length=max_context_length,
-            max_length=request.max_tokens,
+            max_length=request.max_tokens if request.max_tokens < 1024 else 1024,
             n=request.n,
-            rep_pen=request.frequency_penalty,
+            rep_pen=request.frequency_penalty+1,
             stop_sequence=([] if request.stop is None else request.stop)
             + list(all_stops),
             temperature=request.temperature,
@@ -75,15 +75,13 @@ def openai_to_horde_model_response(
     if primary_model not in models:
         raise ValueError(f"Model {primary_model} not known!")
 
-    logger.debug(request.frequency_penalty)
-    logger.debug(request.max_tokens)
     return HordeRequest(
         prompt=request.input,
         models=model_names,
         timeout=300 if request.timeout is None else int(request.timeout),
         params=ModelGenerationInput(
             max_context_length=max_context_length,
-            max_length=request.max_tokens,
+            max_length=request.max_tokens if request.max_tokens < 1024 else 1024,
             n=request.n,
             rep_pen=request.frequency_penalty+1,
             temperature=request.temperature,
