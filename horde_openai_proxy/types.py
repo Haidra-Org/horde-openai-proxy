@@ -28,6 +28,7 @@ class ChatCompletionResponse(BaseModel):
     created: int
     model: str
     usage: dict
+    object: str = "chat.completion"
 
 
 class ModelResponseRequest(BaseModel):
