@@ -28,7 +28,7 @@ def get_data(response: requests.Response):
         raise ValueError(f"Error: {message}")
     return response.json()
 
-
+@logger.catch(reraise=True)
 def get_horde_completion(
     apikey: str,
     request: HordeRequest,
