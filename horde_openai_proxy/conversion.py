@@ -83,7 +83,7 @@ def openai_to_horde_model_response(
             max_context_length=max_context_length,
             max_length=request.max_tokens,
             n=request.n,
-            rep_pen=request.frequency_penalty,
+            rep_pen=request.frequency_penalty+1,
             temperature=request.temperature,
             top_p=request.top_p,
         ),
