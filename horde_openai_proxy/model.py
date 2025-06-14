@@ -34,7 +34,8 @@ QUANTS = {
 }
 
 IGNORED_WORDS = {"GGUF"}
-
+# From https://huggingface.co/KoboldAI/Llama-3.1-8B-BookAdventures/blob/main/tokenizer_config.json
+FALLBACK_ALPACA_JINJA = "{% set system_message = '' %}{% if messages[0]['role'] == 'system' %}{% set system_message = messages[0]['content'] %}{% endif %}{% if system_message is defined %}{{ system_message }}{% endif %}{% for message in messages %}{% set content = message['content'] %}{% if message['role'] == 'user' %}{{ '### Instruction:\n' + content + '\n\n### Response:\n' }}{% elif message['role'] == 'assistant' %}{{ content + '<|end_of_text|>' + '\n\n' }}{% endif %}{% endfor %}"
 
 def estimate_clean_name(name: str) -> str:
     """Estimate the clean name of a model, without quant, size, backend, ..."""

@@ -7,7 +7,7 @@ from jinja2.sandbox import ImmutableSandboxedEnvironment
 from loguru import logger
 import requests
 from .data import BASE_MODELS
-from .model import get_models
+from .model import get_models, FALLBACK_ALPACA_JINJA
 
 jinja_env = ImmutableSandboxedEnvironment(trim_blocks=True,
                                           lstrip_blocks=True)
@@ -65,13 +65,20 @@ def apply_template(conversation: list, model: str) -> str:
     """
     tokenizer_config = get_tokenizer_config(model)
     format_template = tokenizer_config.get('chat_template')
+    if not format_template:
+        format_template = FALLBACK_ALPACA_JINJA
+    logger.debug(format_template)
+    logger.debug(conversation)
     jinja_compiled_template = jinja_env.from_string(format_template)
-    return jinja_compiled_template.render(
+    
+    jt =  jinja_compiled_template.render(
         messages=conversation,
         add_generation_prompt=True,
         bos_token=tokenizer_config['bos_token'] if tokenizer_config.get('bos_token') else "",
         eos_token=tokenizer_config['eos_token'] if tokenizer_config.get('eos_token') else "",
     )
+    logger.debug(jt)
+    return jt
 
 
 def to_role(role: str) -> str:
