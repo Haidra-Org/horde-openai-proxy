@@ -1,7 +1,7 @@
 import time
 from json import JSONDecodeError
 from typing import List
-
+from loguru import logger
 import requests
 
 from .types import HordeRequest, TextGeneration
@@ -50,13 +50,7 @@ def get_horde_completion(
     :return: List of TextGeneration
     :raises ValueError
     """
-    initial_request = get_data(
-        requests.post(
-            "https://stablehorde.net/api/v2/generate/text/async",
-            headers={
-                "apikey": apikey,
-            },
-            json={
+    body = {
                 "prompt": request.prompt,
                 "models": request.models,
                 "params": request.params.model_dump(exclude_none=True),
@@ -65,6 +59,14 @@ def get_horde_completion(
                 "slow_workers": slow_workers,
                 "allow_downgrade": allow_downgrade,
             },
+    logger.debug(body)
+    initial_request = get_data(
+        requests.post(
+            "https://stablehorde.net/api/v2/generate/text/async",
+            headers={
+                "apikey": apikey,
+            },
+            json=body,
         )
     )
 
