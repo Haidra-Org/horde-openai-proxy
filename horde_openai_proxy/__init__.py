@@ -18,6 +18,7 @@ __all__ = [
     "filter_models",
     "openai_to_horde_model_response",
     "horde_response_to_openai_model_response",
+    "HeartbeatResponse",
 ]
 
 import os
@@ -40,6 +41,7 @@ from .types import (
     ModelResponse,
     HordeRequest,
     ModelGenerationInput,
+    HeartbeatResponse,
 )
 from .utils import filter_models
 

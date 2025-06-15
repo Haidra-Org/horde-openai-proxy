@@ -96,3 +96,9 @@ class TextGeneration(BaseModel):
     model: str
     text: str
     kudos: int
+
+
+class HeartbeatResponse(BaseModel):
+
+    message: str = 'OK'
+

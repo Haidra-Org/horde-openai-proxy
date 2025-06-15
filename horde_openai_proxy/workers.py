@@ -4,6 +4,8 @@ import requests
 from typing import List, Optional, Dict, Any
 from .consts import VERSION
 from loguru import logger
+from cachetools import TTLCache, cached
+
 class Worker:
   def __init__(
     self,
@@ -97,7 +99,6 @@ class HordeWorkers():
       "Client-Agent": f"horde-openai-proxy:{VERSION}:db0"
     }
     try:
-      logger.info("Fetching workers from the AI Horde...")
       response = requests.get(url, headers=headers, timeout=30)
       response.raise_for_status()
       workers_data = response.json()
@@ -109,7 +110,8 @@ class HordeWorkers():
 
   def stop(self):
     self._stop_event.set()
-    
+
+  @cached(TTLCache(maxsize=1, ttl=30))    
   def get_max_tokens_for_model(self, model: str) -> int:
     """
     Get the maximum tokens for a specific model.
@@ -125,6 +127,8 @@ class HordeWorkers():
       return highest_max_length
     return 120
 
+
+  @cached(TTLCache(maxsize=1, ttl=30))    
   def get_max_context_length_for_model(self, model: str) -> int:
     """
     Get the maximum context length for a specific model.

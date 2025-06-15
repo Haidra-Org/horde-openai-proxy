@@ -11,6 +11,7 @@ from horde_openai_proxy import (
     ModelResponseRequest,
     ModelResponse,
     Model,
+    HeartbeatResponse,
     get_horde_completion,
     openai_to_horde,
     openai_to_horde_model_response,
@@ -20,7 +21,7 @@ from horde_openai_proxy import (
 )
 from starlette.middleware.cors import CORSMiddleware # Import CORSMiddleware
 from sse_starlette.sse import EventSourceResponse
-import json
+import requests
 
 app = FastAPI()
 
@@ -191,3 +192,16 @@ def post_model_response(
         raise HTTPException(status_code=406, detail=str(err))
 
     return horde_response_to_openai_model_response(completions)
+
+@app.get("/heartbeat")
+def heartbeat() -> HeartbeatResponse:
+    """
+    Simple heartbeat endpoint to check if the service is running.
+    :return: True if the service is running
+    """
+    hb = requests.get("https://aihorde.net/api/v2/status/heartbeat", timeout=5)
+    if hb.status_code != 200:
+        return HeartbeatResponse(message="AI Horde Error")
+    if hb.json().get("message") != "OK" or hb.json().get("db_connection") != True:
+        return HeartbeatResponse(message="AI Horde DB Error")
+    return HeartbeatResponse(message="OK")
