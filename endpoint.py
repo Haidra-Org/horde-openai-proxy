@@ -66,15 +66,14 @@ def post_chat_completion(
     request: Request,
     body: ChatCompletionRequest,
     authorization:  Annotated[str | None, Header()] = None,
-):  # <-- Remove return type annotation
-    logger.debug(authorization)
+):  
     if not authorization:
         raise HTTPException(status_code=401, detail="Authorization header missing")
     token = authorization.lstrip("Bearer ")
     if not token:
         raise HTTPException(status_code=401, detail="Authorization token missing")
     try:
-        horde_request = openai_to_horde(body)
+        horde_request = openai_to_horde(body, origin_ip=request.client.host, apikey=token)
         completions = get_horde_completion(token, horde_request)
     except ValueError as err:
         logger.error(f"Error processing request: {err}")
@@ -188,7 +187,7 @@ def post_model_response(
     if not token:
         raise HTTPException(status_code=401, detail="Authorization token missing")
     try:
-        horde_request = openai_to_horde_model_response(body)
+        horde_request = openai_to_horde_model_response(body, origin_ip=request.client.host)
         completions = get_horde_completion(token, horde_request)
     except ValueError as err:
         logger.error(f"Error processing request: {err}")

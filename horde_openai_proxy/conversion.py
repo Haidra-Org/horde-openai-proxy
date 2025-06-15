@@ -16,6 +16,8 @@ from .workers import horde_workers
 
 def openai_to_horde(
     request: ChatCompletionRequest,
+    origin_ip: str,
+    apikey: str,
     max_context_length: int = 2048,
 ) -> HordeRequest:
     """
@@ -46,6 +48,8 @@ def openai_to_horde(
     max_available_tokens = horde_workers.get_max_tokens_for_model(primary_model)
     if max_available_tokens > 1024:
         max_available_tokens = 1024
+    if apikey == "0000000000":
+        max_available_tokens = 512
     return HordeRequest(
         prompt=apply_template(request.messages, model_name),
         models=model_names,
@@ -60,10 +64,12 @@ def openai_to_horde(
             temperature=request.temperature,
             top_p=request.top_p,
         ),
+        origin_ip=origin_ip,
     )
 
 def openai_to_horde_model_response(
     request: ModelResponseRequest,
+    origin_ip: str,
     max_context_length: int = 2048,
 ) -> HordeRequest:
     """
@@ -93,6 +99,7 @@ def openai_to_horde_model_response(
             temperature=request.temperature,
             top_p=request.top_p,
         ),
+        origin_ip=origin_ip,
     )
 
 

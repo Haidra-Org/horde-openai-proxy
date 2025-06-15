@@ -62,18 +62,18 @@ def get_horde_completion(
                 "slow_workers": slow_workers,
                 "allow_downgrade": allow_downgrade,
             }
-    logger.debug(body)
     initial_request = get_data(
         requests.post(
             "https://stablehorde.net/api/v2/generate/text/async",
             headers={
                 "apikey": apikey,
                 "Client-Agent": f"horde-openai-proxy:{VERSION}:db0",
+                "X-Forwarded-For": request.origin_ip,  # assuming HordeRequest has an origin_ip attribute
             },
             json=body,
         )
     )
-
+    logger.debug(request.origin_ip)
     uuid = initial_request["id"]
 
     # Await the completion

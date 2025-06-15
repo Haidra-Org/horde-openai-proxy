@@ -87,6 +87,7 @@ class HordeRequest(BaseModel):
     models: List[str] = Field(...)
     timeout: int = Field((60 * 20) - 30)
     params: ModelGenerationInput
+    origin_ip: str = Field(...)
 
 
 class TextGeneration(BaseModel):

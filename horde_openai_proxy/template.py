@@ -8,7 +8,7 @@ from loguru import logger
 import requests
 from .data import BASE_MODELS
 from .model import get_models, FALLBACK_ALPACA_JINJA
-
+from datetime import datetime
 jinja_env = ImmutableSandboxedEnvironment(trim_blocks=True,
                                           lstrip_blocks=True)
 
@@ -71,13 +71,17 @@ def apply_template(conversation: list, model: str) -> str:
     logger.debug(conversation)
     jinja_compiled_template = jinja_env.from_string(format_template)
     
-    jt =  jinja_compiled_template.render(
-        messages=conversation,
-        add_generation_prompt=True,
-        bos_token=tokenizer_config['bos_token'] if tokenizer_config.get('bos_token') else "",
-        eos_token=tokenizer_config['eos_token'] if tokenizer_config.get('eos_token') else "",
-    )
-    logger.debug(jt)
+    try:
+        jt =  jinja_compiled_template.render(
+            messages=conversation,
+            add_generation_prompt=True,
+            bos_token=tokenizer_config['bos_token'] if tokenizer_config.get('bos_token') else "",
+            eos_token=tokenizer_config['eos_token'] if tokenizer_config.get('eos_token') else "",
+            strftime_now=datetime.now().strftime,
+        )
+    except Exception as err:
+        logger.error(err)
+        raise err
     return jt
 
 
