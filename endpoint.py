@@ -22,6 +22,10 @@ from horde_openai_proxy import (
 from starlette.middleware.cors import CORSMiddleware # Import CORSMiddleware
 from sse_starlette.sse import EventSourceResponse
 import requests
+from fastapi.logger import logger
+
+logger.setLevel("WARNING")  # Set log level to DEBUG for more detailed logs
+
 
 app = FastAPI()
 
