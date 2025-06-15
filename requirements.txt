@@ -6,3 +6,4 @@ transformers
 loguru
 requests
 sse-starlette
+markdown

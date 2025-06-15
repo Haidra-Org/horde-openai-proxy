@@ -23,12 +23,10 @@ from starlette.middleware.cors import CORSMiddleware # Import CORSMiddleware
 from sse_starlette.sse import EventSourceResponse
 import requests
 from fastapi.logger import logger
-
-logger.setLevel("WARNING")  # Set log level to DEBUG for more detailed logs
-
+from fastapi.responses import HTMLResponse
+import markdown
 
 app = FastAPI()
-
 
 app.add_middleware(
     CORSMiddleware, # Add CORSMiddleware as the first argument
@@ -87,6 +85,7 @@ def post_chat_completion(
         async def event_generator():
             import time
             import json
+
 
             openai_response = completions_to_openai_response(completions)
             if hasattr(openai_response, "model_dump"):
@@ -209,3 +208,21 @@ def heartbeat() -> HeartbeatResponse:
     if hb.json().get("message") != "OK" or hb.json().get("db_connection") != True:
         return HeartbeatResponse(message="AI Horde DB Error")
     return HeartbeatResponse(message="OK")
+
+@app.get("/", response_class=HTMLResponse)
+def index():
+    with open("index.md", "r") as f:
+        md_content = f.read()
+    style = """<style>
+        body {
+            max-width: 120ex;
+            margin: 0 auto;
+            color: #333333;
+            line-height: 1.4;
+            font-family: sans-serif;
+            padding: 1em;
+        }
+        </style>
+    """
+    html_content = f"{style}{markdown.markdown(md_content)}"
+    return HTMLResponse(content=html_content)
