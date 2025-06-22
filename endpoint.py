@@ -25,6 +25,7 @@ import requests
 from fastapi.logger import logger
 from fastapi.responses import HTMLResponse
 import markdown
+from horde_openai_proxy.utils import get_origin_ip
 
 app = FastAPI()
 app.add_middleware(
@@ -70,15 +71,8 @@ def post_chat_completion(
     token = authorization.lstrip("Bearer ")
     if not token:
         raise HTTPException(status_code=401, detail="Authorization token missing")
-    print(request.headers)
-    print(request.client.host)
-    origin_ip = request.client.host
-    fwhdr = request.headers.get("X-Forwarded-For",request.headers.get("x-forwarded-for"))
-    print(fwhdr)
-    if fwhdr:
-        origin_ip = fwhdr.split(",")[0].strip()
     try:
-        horde_request = openai_to_horde(body, origin_ip=request.client.host, apikey=token)
+        horde_request = openai_to_horde(body, origin_ip=get_origin_ip(request), apikey=token)
         completions = get_horde_completion(token, horde_request)
     except ValueError as err:
         logger.error(f"Error processing request: {err}")
@@ -191,7 +185,7 @@ def post_model_response(
     if not token:
         raise HTTPException(status_code=401, detail="Authorization token missing")
     try:
-        horde_request = openai_to_horde_model_response(body, origin_ip=request.client.host, apikey=token)
+        horde_request = openai_to_horde_model_response(body, origin_ip=get_origin_ip(request), apikey=token)
         completions = get_horde_completion(token, horde_request)
     except ValueError as err:
         logger.error(f"Error processing request: {err}")
