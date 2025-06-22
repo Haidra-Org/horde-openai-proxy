@@ -27,7 +27,6 @@ from fastapi.responses import HTMLResponse
 import markdown
 
 app = FastAPI()
-
 app.add_middleware(
     CORSMiddleware, # Add CORSMiddleware as the first argument
     allow_credentials=True,
@@ -60,7 +59,6 @@ def get_chat_models(
         max_size=max_size,
     )}
 
-
 @app.post("/v1/chat/completions")
 def post_chat_completion(
     request: Request,
@@ -72,8 +70,8 @@ def post_chat_completion(
     token = authorization.lstrip("Bearer ")
     if not token:
         raise HTTPException(status_code=401, detail="Authorization token missing")
-    logger.error(request.headers)
-    logger.error(request.client.host)
+    print(request.headers)
+    print(request.client.host)
     origin_ip = request.client.host
     if request.headers.get("X-Forwarded-For"):
         origin_ip = request.headers.get("X-Forwarded-For").split(",")[0].strip()
@@ -84,11 +82,10 @@ def post_chat_completion(
         logger.error(f"Error processing request: {err}")
         raise HTTPException(status_code=406, detail=str(err))
 
-    if body.stream:
-        logger.debug("Faking Streaming response")
+    if body.stream: 
         async def event_generator():
             import time
-            import json
+            import json  
 
 
             openai_response = completions_to_openai_response(completions)
