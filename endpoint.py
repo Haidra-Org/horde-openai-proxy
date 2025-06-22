@@ -74,6 +74,7 @@ def post_chat_completion(
     print(request.client.host)
     origin_ip = request.client.host
     fwhdr = request.headers.get("X-Forwarded-For",request.headers.get("x-forwarded-for"))
+    print(fwhdr)
     if fwhdr:
         origin_ip = fwhdr.split(",")[0].strip()
     try:
