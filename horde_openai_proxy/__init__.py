@@ -19,12 +19,11 @@ __all__ = [
     "openai_to_horde_model_response",
     "horde_response_to_openai_model_response",
     "HeartbeatResponse",
+    "logger"
 ]
 
-import os
-
-import huggingface_hub
 from dotenv import load_dotenv
+from .logger import logger
 
 from .conversion import completions_to_openai_response, horde_to_openai, openai_to_horde, openai_to_horde_model_response, horde_response_to_openai_model_response
 from .horde import TextGeneration, get_horde_completion, get_horde_models

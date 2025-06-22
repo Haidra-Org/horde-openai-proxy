@@ -9,3 +9,4 @@ chat_templates
 venv
 __pycache__
 tokenizer_configs
+oaihordeproxy*log*
