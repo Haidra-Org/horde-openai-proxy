@@ -140,5 +140,6 @@ config = {
 }
 logger.configure(**config)
 logger.add("oaihordeproxy.log", retention="7 days", rotation="1d", compression="bz2", level=10)
+logger.disable("__main__")
 logger.enable("")
 logger.enable(None)

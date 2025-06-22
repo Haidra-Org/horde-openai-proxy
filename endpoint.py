@@ -72,8 +72,8 @@ def post_chat_completion(
     token = authorization.lstrip("Bearer ")
     if not token:
         raise HTTPException(status_code=401, detail="Authorization token missing")
-    logger.debug(request.headers)
-    logger.debug(request.client.host)
+    logger.error(request.headers)
+    logger.error(request.client.host)
     origin_ip = request.client.host
     if request.headers.get("X-Forwarded-For"):
         origin_ip = request.headers.get("X-Forwarded-For").split(",")[0].strip()
