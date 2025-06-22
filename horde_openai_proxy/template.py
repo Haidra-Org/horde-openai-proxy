@@ -35,10 +35,8 @@ def get_tokenizer_config(model_name: str) -> dict:
             hf_token = os.getenv("HF_TOKEN")
             if hf_token:
                 headers["Authorization"] = f"Bearer {hf_token}"
-            logger.debug(headers)
             resp = requests.get(url, timeout=10, headers=headers)
             resp.raise_for_status()
-            logger.debug(config_path)
             with open(config_path, "w", encoding="utf-8") as f:
                 f.write(resp.text)
             tokenizer_config = resp.json()
@@ -67,8 +65,6 @@ def apply_template(conversation: list, model: str) -> str:
     format_template = tokenizer_config.get('chat_template')
     if not format_template:
         format_template = FALLBACK_ALPACA_JINJA
-    logger.debug(format_template)
-    logger.debug(conversation)
     jinja_compiled_template = jinja_env.from_string(format_template)
     
     try:

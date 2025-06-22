@@ -89,10 +89,18 @@ def get_horde_completion(
         )
         logger.debug(data)
         if not data["is_possible"]:
+            data = get_data(
+                requests.delete(
+                    f"https://stablehorde.net/api/v2/generate/text/status/{uuid}",
+                    headers={
+                        "Client-Agent": f"horde-openai-proxy:{VERSION}:db0",
+                    },
+                )
+            )
             raise ValueError("Request is not possible.")
 
         if data["faulted"]:
-            raise ValueError("Request is not possible.")
+            raise ValueError("Request has faulted.")
 
         if data["done"]:
             if len(data["generations"]) < (

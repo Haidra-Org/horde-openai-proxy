@@ -72,6 +72,10 @@ def post_chat_completion(
     token = authorization.lstrip("Bearer ")
     if not token:
         raise HTTPException(status_code=401, detail="Authorization token missing")
+    logger.debug(request.headers)
+    origin_ip = request.client.host
+    if request.headers.get("X-Forwarded-For"):
+        origin_ip = request.headers.get("X-Forwarded-For").split(",")[0].strip()
     try:
         horde_request = openai_to_horde(body, origin_ip=request.client.host, apikey=token)
         completions = get_horde_completion(token, horde_request)
@@ -187,7 +191,7 @@ def post_model_response(
     if not token:
         raise HTTPException(status_code=401, detail="Authorization token missing")
     try:
-        horde_request = openai_to_horde_model_response(body, origin_ip=request.client.host)
+        horde_request = openai_to_horde_model_response(body, origin_ip=request.client.host, apikey=token)
         completions = get_horde_completion(token, horde_request)
     except ValueError as err:
         logger.error(f"Error processing request: {err}")
