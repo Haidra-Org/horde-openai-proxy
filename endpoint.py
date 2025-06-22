@@ -73,11 +73,10 @@ def post_chat_completion(
     if not token:
         raise HTTPException(status_code=401, detail="Authorization token missing")
     logger.debug(request.headers)
+    logger.debug(request.client.host)
     origin_ip = request.client.host
     if request.headers.get("X-Forwarded-For"):
         origin_ip = request.headers.get("X-Forwarded-For").split(",")[0].strip()
-    logger.debug(request.client.host)
-    logger.debug(request.headers)
     try:
         horde_request = openai_to_horde(body, origin_ip=request.client.host, apikey=token)
         completions = get_horde_completion(token, horde_request)
