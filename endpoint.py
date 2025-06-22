@@ -73,8 +73,9 @@ def post_chat_completion(
     print(request.headers)
     print(request.client.host)
     origin_ip = request.client.host
-    if request.headers.get("X-Forwarded-For"):
-        origin_ip = request.headers.get("X-Forwarded-For").split(",")[0].strip()
+    fwhdr = request.headers.get("X-Forwarded-For",request.headers.get("x-forwarded-for"))
+    if fwhdr:
+        origin_ip = fwhdr.split(",")[0].strip()
     try:
         horde_request = openai_to_horde(body, origin_ip=request.client.host, apikey=token)
         completions = get_horde_completion(token, horde_request)
