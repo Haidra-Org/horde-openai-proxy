@@ -178,7 +178,6 @@ def post_model_response(
     body: ModelResponseRequest,
     authorization:  Annotated[str | None, Header()] = None,
 ) -> ModelResponse:
-    logger.debug(authorization)
     if not authorization:
         raise HTTPException(status_code=401, detail="Authorization header missing")
     token = authorization.lstrip("Bearer ")

@@ -134,7 +134,7 @@ def get_origin_ip(request):
     """
     fwhdr = request.headers.get("X-Forwarded-For", request.headers.get("x-forwarded-for"))
     if fwhdr:
-        logger.debug(f"Using X-Forwarded-For header: {fwhdr}")
+        # logger.debug(f"Using X-Forwarded-For header: {fwhdr}")
         return fwhdr.split(",")[0].strip()
-    logger.debug(f"Using request client host: {request.client.host}")
+    # logger.debug(f"Using request client host: {request.client.host}")
     return request.client.host

@@ -6,7 +6,7 @@ import requests
 from .consts import VERSION
 
 from .types import HordeRequest, TextGeneration
-
+from .config import Config
 
 def remove_stop_words(text: str, stop_sequence: List[str]) -> str:
     """
@@ -64,16 +64,16 @@ def get_horde_completion(
             }
     initial_request = get_data(
         requests.post(
-            "https://stablehorde.net/api/v2/generate/text/async",
+            f"{Config.horde_url}/api/v2/generate/text/async",
             headers={
                 "apikey": apikey,
                 "Client-Agent": f"horde-openai-proxy:{VERSION}:db0",
-                "X-Forwarded-For": request.origin_ip,  # assuming HordeRequest has an origin_ip attribute
+                "Proxied-For": request.origin_ip,
+                "Proxy-Authorization": Config.horde_proxy_passkey,
             },
             json=body,
         )
     )
-    logger.debug(request.origin_ip)
     uuid = initial_request["id"]
 
     # Await the completion
@@ -81,19 +81,22 @@ def get_horde_completion(
     while time.time() - initial_time < request.timeout:
         data = get_data(
             requests.get(
-                f"https://stablehorde.net/api/v2/generate/text/status/{uuid}",
+                f"{Config.horde_url}/api/v2/generate/text/status/{uuid}",
                 headers={
                     "Client-Agent": f"horde-openai-proxy:{VERSION}:db0",
+                    "Proxied-For": request.origin_ip,
+                    "Proxy-Authorization": Config.horde_proxy_passkey,
                 },
             )
         )
-        logger.debug(data)
         if not data["is_possible"]:
             data = get_data(
                 requests.delete(
-                    f"https://stablehorde.net/api/v2/generate/text/status/{uuid}",
+                    f"{Config.horde_url}/api/v2/generate/text/status/{uuid}",
                     headers={
                         "Client-Agent": f"horde-openai-proxy:{VERSION}:db0",
+                        "Proxied-For": request.origin_ip,
+                        "Proxy-Authorization": Config.horde_proxy_passkey,
                     },
                 )
             )
@@ -125,7 +128,7 @@ def get_horde_completion(
                 )
             return generations
         else:
-            time.sleep(0.5)
+            time.sleep(1)
 
     raise ValueError("Request timed out.")
 
@@ -138,7 +141,7 @@ def get_horde_models() -> List[dict]:
     """
     return get_data(
         requests.get(
-            "https://stablehorde.net/api/v2/status/models",
+            f"{Config.horde_url}/api/v2/status/models",
             params={
                 "type": "text",
                 "min_count": 1,

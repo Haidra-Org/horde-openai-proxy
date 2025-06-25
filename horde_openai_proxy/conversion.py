@@ -49,7 +49,7 @@ def openai_to_horde(
     if max_available_tokens > 1024:
         max_available_tokens = 1024
     if apikey == "0000000000" and max_available_tokens > 512:
-        max_available_tokens = 512
+        max_available_tokens = 256
     return HordeRequest(
         prompt=apply_template(request.messages, model_name),
         models=model_names,
@@ -91,7 +91,7 @@ def openai_to_horde_model_response(
     if max_available_tokens > 1024:
         max_available_tokens = 1024
     if apikey == "0000000000" and max_available_tokens > 512:
-        max_available_tokens = 512
+        max_available_tokens = 256
     return HordeRequest(
         prompt=request.input,
         models=model_names,

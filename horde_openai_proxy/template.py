@@ -9,6 +9,7 @@ import requests
 from .data import BASE_MODELS
 from .model import get_models, FALLBACK_ALPACA_JINJA
 from datetime import datetime
+from .config import Config
 jinja_env = ImmutableSandboxedEnvironment(trim_blocks=True,
                                           lstrip_blocks=True)
 
@@ -32,9 +33,8 @@ def get_tokenizer_config(model_name: str) -> dict:
         logger.info(f"Fetching tokenizer config for {model_name} from {url}")
         try:
             headers = {}
-            hf_token = os.getenv("HF_TOKEN")
-            if hf_token:
-                headers["Authorization"] = f"Bearer {hf_token}"
+            if Config.hf_token:
+                headers["Authorization"] = f"Bearer {Config.hf_token}"
             resp = requests.get(url, timeout=10, headers=headers)
             resp.raise_for_status()
             with open(config_path, "w", encoding="utf-8") as f:
