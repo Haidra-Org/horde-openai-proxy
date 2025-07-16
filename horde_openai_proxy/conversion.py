@@ -55,7 +55,7 @@ def openai_to_horde(
         models=model_names,
         timeout=300 if request.timeout is None else int(request.timeout),
         params=ModelGenerationInput(
-            max_context_length=max_context_length if max_context_length <= max_available_context_length else max_available_context_length,
+            max_context_length=max_context_length if max_context_length is not None and max_context_length <= max_available_context_length else max_available_context_length,
             max_length=request.max_tokens if request.max_tokens <= max_available_tokens else max_available_tokens,
             n=request.n,
             rep_pen=request.frequency_penalty+1 if request.frequency_penalty is not None else 1.0,
@@ -97,7 +97,7 @@ def openai_to_horde_model_response(
         models=model_names,
         timeout=300 if request.timeout is None else int(request.timeout),
         params=ModelGenerationInput(
-            max_context_length=max_context_length if max_context_length <= max_available_context_length else max_available_context_length,
+            max_context_length=max_context_length if max_context_length is not None and max_context_length <= max_available_context_length else max_available_context_length,
             max_length=request.max_tokens if request.max_tokens <= max_available_tokens else max_available_tokens,
             n=request.n,
             rep_pen=request.frequency_penalty+1 if request.frequency_penalty is not None else 1.0,
