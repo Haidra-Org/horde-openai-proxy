@@ -1,7 +1,6 @@
 from typing import List
 
 from fastapi import FastAPI, HTTPException
-from starlette.requests import Request
 
 from horde_openai_proxy import (
     ChatCompletionRequest,

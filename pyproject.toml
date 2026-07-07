@@ -1,40 +1,36 @@
-[tool.poetry]
+[project]
 name = "horde-openai-proxy"
 version = "0.1.0"
 description = ""
-authors = ["Luke100000 <jonas.peche@aon.at>"]
+authors = [{ name = "Luke100000", email = "jonas.peche@aon.at" }]
+requires-python = ">=3.13,<4"
 readme = "README.md"
+classifiers = [
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+]
+dependencies = [
+    "cachetools",
+    "transformers",
+    "sentencepiece",
+    "protobuf",
+    "jinja2",
+    "python-dotenv",
+    "requests>=2.34.2",
+]
 
-[tool.poetry.dependencies]
-python = "^3.9"
-cachetools = "*"
-fastapi = "*"
-transformers = "*"
-sentencepiece = "*"
-protobuf = "*"
-jinja2 = "*"
-python-dotenv = "*"
+[dependency-groups]
+dev = [
+    "ruff",
+    "pre-commit",
+    "pytest",
+]
+fastapi = ["uvicorn", "fastapi[standard]"]
+bridge = ["openai"]
 
-
-[tool.poetry.group.dev.dependencies]
-ruff = "*"
-pre-commit = "*"
-pytest = "*"
-
-
-[tool.poetry.group.fastapi]
-optional = true
-
-[tool.poetry.group.fastapi.dependencies]
-uvicorn = "^0.30.6"
-
-
-[tool.poetry.group.bridge]
-optional = true
-
-[tool.poetry.group.bridge.dependencies]
-openai = "^1.45.0"
+[tool.uv]
+default-groups = ["dev"]
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["uv_build>=0.11.26,<0.12.0"]
+build-backend = "uv_build"

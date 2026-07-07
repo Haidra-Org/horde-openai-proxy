@@ -48,6 +48,13 @@ the OpenAI API, with a utility endpoint to retrieve filtered models.
 
 [`horde_openai_proxy/bridge.py`](examples/bridge.py) provides an example bridge, however it heavily struggles with keeping character.
 
+To run the bridge:
+
+```shell
+uv sync --group fastapi
+uv run fastapi dev -e examples.endpoint:app
+```
+
 ## Utilities
 
 Included are also utilities to clean up the model zoo mess:
