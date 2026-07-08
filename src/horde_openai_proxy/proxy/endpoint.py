@@ -42,7 +42,7 @@ def get_chat_models(
 def post_chat_completion(
     request: Request, body: ChatCompletionRequest
 ) -> ChatCompletionResponse:
-    token = request.headers["authorization"].lstrip("Bearer ")
+    token = request.headers["authorization"].lstrip("Bearer ").lstrip("sk-")
 
     try:
         horde_request = openai_to_horde(body)
