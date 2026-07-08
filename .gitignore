@@ -1,6 +1,8 @@
 .idea
 .venv
 .env
+.pytest_cache
+.ruff_cache
 
 reports
 
