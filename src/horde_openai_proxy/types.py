@@ -68,8 +68,10 @@ class TextGeneration(BaseModel):
     text: str
     kudos: int
 
+
 class HordeModelInfo(BaseModel):
     """Schema of https://github.com/Haidra-Org/AI-Horde-text-model-reference/blob/main/db.json"""
+
     name: str
     model_name: str
     display_name: str

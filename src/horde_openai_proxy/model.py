@@ -106,13 +106,17 @@ def get_references() -> dict[str, HordeModelInfo]:
     """The references are known models, with usually more accurate information than the guesses."""
     return asyncio.run(get_references_async())
 
+
 @cached_async(TTLCache(maxsize=1, ttl=86400))
 async def get_references_async() -> dict[str, HordeModelInfo]:
     """The references are known models, with usually more accurate information than the guesses."""
     async with httpx.AsyncClient() as client:
-        return (await client.get(
-            "https://raw.githubusercontent.com/db0/AI-Horde-text-model-reference/main/db.json"
-        )).json()
+        return (
+            await client.get(
+                "https://raw.githubusercontent.com/db0/AI-Horde-text-model-reference/main/db.json"
+            )
+        ).json()
+
 
 def get_models() -> dict[str, Model]:
     """
@@ -120,12 +124,15 @@ def get_models() -> dict[str, Model]:
     """
     return asyncio.run(get_models_async())
 
+
 @cached_async(TTLCache(maxsize=1, ttl=3600))
 async def get_models_async() -> dict[str, Model]:
     """
     Get all models from the Horde API, with estimated sizes, base models, templates, etc.
     """
-    references, server_models = await asyncio.gather(get_references_async(), get_horde_models_async())
+    references, server_models = await asyncio.gather(
+        get_references_async(), get_horde_models_async()
+    )
 
     models = {}
     for model in server_models:

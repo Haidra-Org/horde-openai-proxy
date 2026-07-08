@@ -6,7 +6,7 @@ from horde_openai_proxy import (
     ChatCompletionRequest,
     ChatCompletionResponse,
     Model,
-    openai_to_horde,
+    openai_to_horde_async,
     completions_to_openai_response,
     get_horde_completion_async,
 )
@@ -46,7 +46,7 @@ async def post_chat_completion(
 
     try:
         # TODO: Async
-        horde_request = openai_to_horde(body)
+        horde_request = await openai_to_horde_async(body)
         completions = await get_horde_completion_async(token, horde_request)
     except ValueError as e:
         raise HTTPException(status_code=406, detail=str(e))

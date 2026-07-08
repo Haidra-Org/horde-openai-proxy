@@ -8,7 +8,7 @@ import httpx
 from .types import HordeRequest, TextGeneration
 
 HORDE_HOST = "https://stablehorde.net/api/"
-HTTP_CLIENT = httpx.AsyncClient(base_url=HORDE_HOST)
+
 
 def remove_stop_words(text: str, stop_sequence: List[str]) -> str:
     """
@@ -31,8 +31,10 @@ def get_data(response: httpx.Response):
         raise ValueError(f"Error: {message}")
     return response.json()
 
+
 def get_horde_completion(*args, **kwargs) -> List[TextGeneration]:
     return asyncio.run(get_horde_completion_async(*args, **kwargs))
+
 
 async def get_horde_completion_async(
     apikey: str,
@@ -55,7 +57,7 @@ async def get_horde_completion_async(
     :return: List of TextGeneration
     :raises ValueError
     """
-    with HTTP_CLIENT as client:
+    async with httpx.AsyncClient(base_url=HORDE_HOST) as client:
         initial_request = get_data(
             await client.post(
                 "v2/generate/text/async",
@@ -79,9 +81,7 @@ async def get_horde_completion_async(
         # Await the completion
         initial_time = time.time()
         while time.time() - initial_time < request.timeout:
-            data = get_data(
-                client.get(f"v2/generate/text/status/{uuid}")
-            )
+            data = get_data(await client.get(f"v2/generate/text/status/{uuid}"))
 
             if not data["is_possible"]:
                 raise ValueError("Request is not possible.")
@@ -125,13 +125,14 @@ def get_horde_models() -> List[dict]:
     """
     return asyncio.run(get_horde_models_async())
 
+
 async def get_horde_models_async() -> List[dict]:
     """
     Get the models available on the StableHorde API.
     :return: List of models.
     :raises ValueError
     """
-    async with HTTP_CLIENT as client:
+    async with httpx.AsyncClient(base_url=HORDE_HOST) as client:
         return get_data(
             await client.get(
                 "v2/status/models",
@@ -141,4 +142,3 @@ async def get_horde_models_async() -> List[dict]:
                 },
             )
         )
-

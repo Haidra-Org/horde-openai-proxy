@@ -1,7 +1,8 @@
+import asyncio
 import time
 from typing import List
 
-from .model import get_models
+from .model import get_models_async
 from .template import apply_template, get_generation_config, prompt_to_messages
 from .types import (
     ChatCompletionRequest,
@@ -12,7 +13,11 @@ from .types import (
 )
 
 
-def openai_to_horde(
+def openai_to_horde(*args, **kwargs) -> HordeRequest:
+    return asyncio.run(openai_to_horde_async(*args, **kwargs))
+
+
+async def openai_to_horde_async(
     request: ChatCompletionRequest,
     max_context_length: int = 2048,
 ) -> HordeRequest:
@@ -24,7 +29,7 @@ def openai_to_horde(
     :return: The Horde request
     """
     model_names = [m.strip() for m in request.model.split(",")]
-    models = get_models()
+    models = await get_models_async()
     primary_model = model_names[0]
     if primary_model not in models:
         raise ValueError(f"Model {primary_model} not known!")
