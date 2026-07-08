@@ -1,6 +1,6 @@
 from typing import List
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 
 from horde_openai_proxy import (
     ChatCompletionRequest,

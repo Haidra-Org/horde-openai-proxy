@@ -41,7 +41,7 @@ a: HordeRequest = openai_to_horde(b)
 
 ## As proxy
 
-[`horde_openai_proxy/endpoint.py`](examples/endpoint.py) provides a FastAPI example on how to access the AI Horde via
+[`horde_openai_proxy/endpoint.py`](src/horde_openai_proxy/proxy/endpoint.py) provides a FastAPI example on how to access the AI Horde via
 the OpenAI API, with a utility endpoint to retrieve filtered models.
 
 ## As bridge
@@ -52,7 +52,7 @@ To run the bridge:
 
 ```shell
 uv sync --group fastapi
-uv run fastapi dev -e examples.endpoint:app
+uv run fastapi dev -e horde_openai_proxy.proxy:app
 ```
 
 ## Utilities

@@ -12,10 +12,6 @@ classifiers = [
 dependencies = [
     "cachetools",
     "transformers",
-    "sentencepiece",
-    "protobuf",
-    "jinja2",
-    "python-dotenv",
     "requests>=2.34.2",
 ]
 
@@ -28,9 +24,6 @@ dev = [
 ]
 fastapi = ["uvicorn", "fastapi[standard]"]
 bridge = ["openai"]
-
-[tool.uv]
-default-groups = ["dev"]
 
 [build-system]
 requires = ["uv_build>=0.11.26,<0.12.0"]
