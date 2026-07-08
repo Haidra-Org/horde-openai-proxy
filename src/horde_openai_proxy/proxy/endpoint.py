@@ -45,8 +45,8 @@ async def post_chat_completion(
     token = request.headers["authorization"].lstrip("Bearer ").lstrip("sk-")
 
     try:
-        # TODO: Async
         horde_request = await openai_to_horde_async(body)
+        # TODO: Pass req params into this
         completions = await get_horde_completion_async(token, horde_request)
     except ValueError as e:
         raise HTTPException(status_code=406, detail=str(e))

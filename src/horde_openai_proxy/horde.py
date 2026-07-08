@@ -41,7 +41,7 @@ async def get_horde_completion_async(
     request: HordeRequest,
     *,
     trusted_workers: bool = False,
-    validated_backends: bool = True,
+    validated_backends: bool = False,
     slow_workers: bool = True,
     allow_downgrade: bool = False,
 ) -> List[TextGeneration]:
