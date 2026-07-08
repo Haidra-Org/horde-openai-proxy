@@ -1,4 +1,4 @@
-from typing import Optional, Union, List
+from typing import Any, Optional, Union, List
 
 from pydantic import BaseModel, Field
 
@@ -67,3 +67,19 @@ class TextGeneration(BaseModel):
     model: str
     text: str
     kudos: int
+
+class HordeModelInfo(BaseModel):
+    """Schema of https://github.com/Haidra-Org/AI-Horde-text-model-reference/blob/main/db.json"""
+    name: str
+    model_name: str
+    display_name: str
+    description: str
+    baseline: str
+    parameters: Optional[float] = None
+    version: str
+    style: str
+    nsfw: bool
+    url: Optional[str] = None
+    instruct_format: Optional[str] = None
+    tags: list[str] = []
+    settings: dict[str, Any] = {}

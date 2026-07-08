@@ -1,11 +1,14 @@
+import asyncio
 from dataclasses import dataclass
 from typing import Optional
 
 import httpx
-from cachetools import TTLCache, cached
+from cachetools import TTLCache
+from cachetools_async import cached as cached_async
 
 from .data import MODEL_SIZES, MODEL_TO_BASE_MODEL, BASE_MODELS
-from .horde import get_horde_models
+from .horde import get_horde_models_async
+from .types import HordeModelInfo
 
 QUANTS = {
     "q2_k",
@@ -99,23 +102,33 @@ class Model:
     known_to_horde: bool
 
 
-@cached(TTLCache(maxsize=1, ttl=86400))
-def get_references():
+def get_references() -> dict[str, HordeModelInfo]:
     """The references are known models, with usually more accurate information than the guesses."""
-    return httpx.get(
-        "https://raw.githubusercontent.com/db0/AI-Horde-text-model-reference/main/db.json"
-    ).json()
+    return asyncio.run(get_references_async())
 
+@cached_async(TTLCache(maxsize=1, ttl=86400))
+async def get_references_async() -> dict[str, HordeModelInfo]:
+    """The references are known models, with usually more accurate information than the guesses."""
+    async with httpx.AsyncClient() as client:
+        return (await client.get(
+            "https://raw.githubusercontent.com/db0/AI-Horde-text-model-reference/main/db.json"
+        )).json()
 
-@cached(TTLCache(maxsize=1, ttl=3600))
 def get_models() -> dict[str, Model]:
     """
     Get all models from the Horde API, with estimated sizes, base models, templates, etc.
     """
-    references = get_references()
+    return asyncio.run(get_models_async())
+
+@cached_async(TTLCache(maxsize=1, ttl=3600))
+async def get_models_async() -> dict[str, Model]:
+    """
+    Get all models from the Horde API, with estimated sizes, base models, templates, etc.
+    """
+    references, server_models = await asyncio.gather(get_references_async(), get_horde_models_async())
 
     models = {}
-    for model in get_horde_models():
+    for model in server_models:
         name = model["name"]
         if "/" in name:
             reference = references.get(name, {})

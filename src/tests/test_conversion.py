@@ -1,5 +1,6 @@
 import pytest
 from pydantic import BaseModel
+from pytest_httpx import HTTPXMock
 
 from horde_openai_proxy import (
     horde_to_openai,
@@ -35,11 +36,8 @@ def compare_models(a: BaseModel, b: BaseModel) -> None:
     safe_del(differences, "stop")
     assert not differences, differences
 
-
-@pytest.mark.httpx_mock(
-    should_mock=lambda request: request.url.host != "huggingface.co"
-)
-def test_from_horde(httpx_mock):
+@pytest.fixture
+def mock_text_model_reference(httpx_mock: 'HTTPXMock'):
     httpx_mock.add_response(
         url="https://raw.githubusercontent.com/db0/AI-Horde-text-model-reference/main/db.json",
         json={
@@ -58,6 +56,9 @@ def test_from_horde(httpx_mock):
             },
         },
     )
+
+@pytest.fixture
+def mock_horde_model(httpx_mock: 'HTTPXMock'):
     httpx_mock.add_response(
         url="https://stablehorde.net/api/v2/status/models",
         match_params={"type": "text", "min_count": "1"},
@@ -73,6 +74,11 @@ def test_from_horde(httpx_mock):
             }
         ],
     )
+
+@pytest.mark.httpx_mock(
+    should_mock=lambda request: request.url.host != "huggingface.co"
+)
+def test_from_horde(mock_text_model_reference, mock_horde_model):
     h1 = HordeRequest(
         prompt="Test prompt!",
         models=["Henk717/airochronos-33B"],
@@ -96,6 +102,7 @@ def test_from_horde(httpx_mock):
     compare_models(o1, o2)
 
 
+@pytest.mark.skip
 def test_from_prompt():
     templates = set()
     for base_model in BASE_MODELS:

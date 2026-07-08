@@ -3,11 +3,11 @@ from typing import List, Optional
 
 from . import HordeRequest
 from .data import BASE_MODELS
-from .model import get_models, Model
+from .model import Model, get_models_async
 from .template import get_tokenizer
 
 
-def filter_models(
+async def filter_models(
     names: Optional[set[str]] = None,
     clean_names: Optional[set[str]] = None,
     base_models: Optional[set[str]] = None,
@@ -30,7 +30,7 @@ def filter_models(
     :return: A filtered list of models
     """
     filtered_models = []
-    for model in get_models().values():
+    for model in (await get_models_async()).values():
         if names and model.name not in names:
             continue
         if clean_names and model.clean_name not in clean_names:
