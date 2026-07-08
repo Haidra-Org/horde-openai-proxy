@@ -11,8 +11,9 @@ classifiers = [
 ]
 dependencies = [
     "cachetools",
-    "transformers",
-    "requests>=2.34.2",
+    "transformers[sentencepiece,chat-template]",
+    "httpx>=0.27.0",
+    "pydantic>=2.13.4",
 ]
 
 [dependency-groups]
@@ -20,7 +21,7 @@ dev = [
     "ruff",
     "pre-commit",
     "pytest",
-    "requests-mock>=1.12.1",
+    "pytest-httpx>=0.30.0",
 ]
 fastapi = ["uvicorn", "fastapi[standard]"]
 bridge = ["openai"]

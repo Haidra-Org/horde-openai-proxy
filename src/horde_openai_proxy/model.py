@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Optional
 
-import requests
+import httpx
 from cachetools import TTLCache, cached
 
 from .data import MODEL_SIZES, MODEL_TO_BASE_MODEL, BASE_MODELS
@@ -102,7 +102,7 @@ class Model:
 @cached(TTLCache(maxsize=1, ttl=86400))
 def get_references():
     """The references are known models, with usually more accurate information than the guesses."""
-    return requests.get(
+    return httpx.get(
         "https://raw.githubusercontent.com/db0/AI-Horde-text-model-reference/main/db.json"
     ).json()
 

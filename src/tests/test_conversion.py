@@ -1,5 +1,5 @@
+import pytest
 from pydantic import BaseModel
-from requests_mock.mocker import Mocker
 
 from horde_openai_proxy import (
     horde_to_openai,
@@ -36,9 +36,12 @@ def compare_models(a: BaseModel, b: BaseModel) -> None:
     assert not differences, differences
 
 
-def test_from_horde(requests_mock: "Mocker"):
-    requests_mock.get(
-        "https://raw.githubusercontent.com/db0/AI-Horde-text-model-reference/main/db.json",
+@pytest.mark.httpx_mock(
+    should_mock=lambda request: request.url.host != "huggingface.co"
+)
+def test_from_horde(httpx_mock):
+    httpx_mock.add_response(
+        url="https://raw.githubusercontent.com/db0/AI-Horde-text-model-reference/main/db.json",
         json={
             "Henk717/airochronos-33B": {
                 "name": "Henk717/airochronos-33B",
@@ -55,8 +58,9 @@ def test_from_horde(requests_mock: "Mocker"):
             },
         },
     )
-    requests_mock.get(
-        "https://stablehorde.net/api/v2/status/models",
+    httpx_mock.add_response(
+        url="https://stablehorde.net/api/v2/status/models",
+        match_params={"type": "text", "min_count": "1"},
         json=[
             {
                 "performance": 10,

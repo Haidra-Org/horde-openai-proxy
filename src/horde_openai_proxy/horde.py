@@ -2,7 +2,7 @@ import time
 from json import JSONDecodeError
 from typing import List
 
-import requests
+import httpx
 
 from .types import HordeRequest, TextGeneration
 
@@ -19,7 +19,7 @@ def remove_stop_words(text: str, stop_sequence: List[str]) -> str:
     return text
 
 
-def get_data(response: requests.Response):
+def get_data(response: httpx.Response):
     if response.status_code != 200 and response.status_code != 202:
         try:
             message = response.json().get("message")
@@ -51,7 +51,7 @@ def get_horde_completion(
     :raises ValueError
     """
     initial_request = get_data(
-        requests.post(
+        httpx.post(
             "https://stablehorde.net/api/v2/generate/text/async",
             headers={
                 "apikey": apikey,
@@ -74,7 +74,7 @@ def get_horde_completion(
     initial_time = time.time()
     while time.time() - initial_time < request.timeout:
         data = get_data(
-            requests.get(f"https://stablehorde.net/api/v2/generate/text/status/{uuid}")
+            httpx.get(f"https://stablehorde.net/api/v2/generate/text/status/{uuid}")
         )
 
         if not data["is_possible"]:
@@ -118,7 +118,7 @@ def get_horde_models() -> List[dict]:
     :raises ValueError
     """
     return get_data(
-        requests.get(
+        httpx.get(
             "https://stablehorde.net/api/v2/status/models",
             params={
                 "type": "text",
