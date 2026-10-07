@@ -1,5 +1,6 @@
 import json
 import os
+import jinja2
 from dataclasses import dataclass
 from functools import cache
 from typing import Optional
