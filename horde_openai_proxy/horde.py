@@ -81,7 +81,7 @@ def get_horde_completion(
 ) -> List[TextGeneration]:
     """
     Request text completions from the StableHorde API and awaits the completions.
-    Raises a ValueError if the request is not possible, faulted, timed out, or if there are not enough generations.
+    Raises a HTTPException if the request is not possible, faulted, timed out, or if there are not enough generations.
     :param apikey: API key for the StableHorde API.
     :param request: HordeRequest
     :param trusted_workers: Only use workers that have been trusted.
@@ -89,7 +89,7 @@ def get_horde_completion(
     :param slow_workers: Allow slow workers to be used.
     :param allow_downgrade: Allow downgrading context length if necessary.
     :return: List of TextGeneration
-    :raises ValueError
+    :raises HTTPException
     """
     body = {
                 "prompt": request.prompt,
@@ -115,7 +115,6 @@ def get_horde_completion(
     )
     uuid = initial_request["id"]
 
-    # Await the completion
     initial_time = time.time()
     while time.time() - initial_time < request.timeout:
         data = get_data(
@@ -128,9 +127,9 @@ def get_horde_completion(
                 },
             ),
             client_ip = request.origin_ip
-
         )
-        if not data["is_possible"]:
+        
+        if not data.get("is_possible"):
             data = get_data(
                 response = requests.delete(
                     f"{Config.horde_url}/api/v2/generate/text/status/{uuid}",
@@ -142,18 +141,26 @@ def get_horde_completion(
                 ),
                 client_ip = request.origin_ip
             )
-            raise ValueError("Request is not possible.")
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE, 
+                detail="Request is not possible (no workers currently match your requested parameters)."
+            )
 
-        if data["faulted"]:
-            raise ValueError("Request has faulted.")
+        if data.get("faulted"):
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY, 
+                detail="The upstream Horde workers failed to generate a response."
+            )
 
-        if data["done"]:
-            if len(data["generations"]) < (
+        if data.get("done"):
+            if len(data.get("generations", [])) < (
                 1 if request.params.n is None else request.params.n
             ):
-                raise ValueError("Not enough generations.")
+                raise HTTPException(
+                    status_code=status.HTTP_502_BAD_GATEWAY, 
+                    detail="The upstream Horde returned an incomplete response with missing generation content."
+                )
 
-            # Parse the generations
             generations = []
             for generation in data["generations"]:
                 text = remove_stop_words(
@@ -172,7 +179,10 @@ def get_horde_completion(
         else:
             time.sleep(1)
 
-    raise ValueError("Request timed out.")
+    raise HTTPException(
+        status_code=status.HTTP_504_GATEWAY_TIMEOUT, 
+        detail=f"Request timed out after {request.timeout} seconds waiting for Horde workers."
+    )
 
 
 @logger.catch(reraise=True)
