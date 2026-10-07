@@ -41,6 +41,7 @@ def remove_stop_words(text: str, stop_sequence: List[str]) -> str:
 #     return response.json()
 
 
+@logger.catch(reraise=True)
 def get_data(response: requests.Response, client_ip: str):
     if response.status_code not in (200, 202):
         
