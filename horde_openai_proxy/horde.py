@@ -101,7 +101,7 @@ def get_horde_completion(
                 "allow_downgrade": allow_downgrade,
             }
     initial_request = get_data(
-        requests.post(
+        response = requests.post(
             f"{Config.horde_url}/api/v2/generate/text/async",
             headers={
                 "apikey": apikey,
@@ -119,7 +119,7 @@ def get_horde_completion(
     initial_time = time.time()
     while time.time() - initial_time < request.timeout:
         data = get_data(
-            requests.get(
+            response = requests.get(
                 f"{Config.horde_url}/api/v2/generate/text/status/{uuid}",
                 headers={
                     "Client-Agent": f"horde-openai-proxy:{VERSION}:db0",
@@ -132,16 +132,16 @@ def get_horde_completion(
         )
         if not data["is_possible"]:
             data = get_data(
-                requests.delete(
+                response = requests.delete(
                     f"{Config.horde_url}/api/v2/generate/text/status/{uuid}",
                     headers={
                         "Client-Agent": f"horde-openai-proxy:{VERSION}:db0",
                         "Proxied-For": request.origin_ip,
                         "Proxy-Authorization": Config.horde_proxy_passkey,
                     },
-                )
-            ),
-            client_ip = request.origin_ip
+                ),
+                client_ip = request.origin_ip
+            )
             raise ValueError("Request is not possible.")
 
         if data["faulted"]:
@@ -183,7 +183,7 @@ def get_horde_models(origin_ip) -> List[dict]:
     :raises ValueError
     """
     return get_data(
-        requests.get(
+        response = requests.get(
             f"{Config.horde_url}/api/v2/status/models",
             params={
                 "type": "text",
