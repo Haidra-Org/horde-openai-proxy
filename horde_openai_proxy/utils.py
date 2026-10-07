@@ -121,7 +121,7 @@ def check_available_base_models():
     for base_model in BASE_MODELS:
         logger.info(f"Checking availability of base model: {base_model}")
         try:
-            get_tokenizer_config(base_model)
+            get_tokenizer_config(base_model, "127.0.0.1")
         except Exception as e:
             url = BASE_MODELS[base_model]["model"]
             print(f"Model {base_model} at {url} not available: {e}")

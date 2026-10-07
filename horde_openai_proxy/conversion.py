@@ -42,7 +42,7 @@ def openai_to_horde(
     # One should not mix base_models, but if one does, at least stop works
     all_stops = set()
     for model_name in model_names:        
-        tokenizer_config = get_tokenizer_config(model_name)
+        tokenizer_config = get_tokenizer_config(model_name,origin_ip)
         # TODO: Set all_stops
     max_available_context_length = horde_workers.get_max_context_length_for_model(primary_model)
     max_available_tokens = horde_workers.get_max_tokens_for_model(primary_model)
