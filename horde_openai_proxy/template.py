@@ -71,13 +71,17 @@ def apply_template(conversation: list, model: str, origin_ip: str) -> str:
         format_template = FALLBACK_ALPACA_JINJA
     jinja_compiled_template = jinja_env.from_string(format_template)
     
-    jt =  jinja_compiled_template.render(
-        messages=conversation,
-        add_generation_prompt=True,
-        bos_token=tokenizer_config['bos_token'] if tokenizer_config.get('bos_token') else "",
-        eos_token=tokenizer_config['eos_token'] if tokenizer_config.get('eos_token') else "",
-        strftime_now=datetime.now().strftime,
-    )
+    try:
+        jt =  jinja_compiled_template.render(
+            messages=conversation,
+            add_generation_prompt=True,
+            bos_token=tokenizer_config['bos_token'] if tokenizer_config.get('bos_token') else "",
+            eos_token=tokenizer_config['eos_token'] if tokenizer_config.get('eos_token') else "",
+            strftime_now=datetime.now().strftime,
+        )
+    except Exception as err:
+        logger.debug(f"format_template: {format_template}")
+        raise err
     return jt
 
 
