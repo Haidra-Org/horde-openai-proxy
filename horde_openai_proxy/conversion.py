@@ -55,21 +55,28 @@ def openai_to_horde(
     if apikey == "0000000000" and max_available_tokens > 256:
         max_available_tokens = 256
 
-    # Attempt to apply the Jinja template and catch missing fields
+    # Attempt to apply the Jinja template and catch missing fields or type mismatches
     try:
-        # Note: Using primary_model here to avoid leaking model_name from the for loop above
         prompt = apply_template(request.messages, primary_model, origin_ip=origin_ip)
     except jinja2.exceptions.UndefinedError as err:
-        # err will be something like: "'dict object' has no attribute 'content'"
         raise HTTPException(
             status_code=400, 
             detail=f"The requested model's chat template requires a field that is missing from your messages: {str(err)}"
         )
     except jinja2.exceptions.TemplateError as err:
-        # Catch any other generic template syntax/rendering errors
         raise HTTPException(
             status_code=400, 
             detail=f"Failed to apply chat template to the provided messages: {str(err)}"
+        )
+    except TypeError as err:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Type error during template rendering. This usually occurs if a message's 'content' is a list (like a multimodal vision prompt) but the chosen model's template expects a string. Error: {str(err)}"
+        )
+    except Exception as err:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"An unexpected error occurred while parsing the chat template: {str(err)}"
         )
 
     return HordeRequest(
