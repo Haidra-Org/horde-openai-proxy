@@ -119,8 +119,7 @@ def get_references():
     ).json()
 
 
-@logger.catch(reraise=True)
-@cached(TTLCache(maxsize=1, ttl=3600))
+@cached(cache=TTLCache(maxsize=1, ttl=3600), key=lambda origin_ip: "global_models_cache")
 def get_models(origin_ip) -> dict[str, Model]:
     """
     Get all models from the Horde API, with estimated sizes, base models, templates, etc.

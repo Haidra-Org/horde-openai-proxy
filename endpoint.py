@@ -36,7 +36,6 @@ app.add_middleware(
     allow_origins=["*"] # You'll likely want to specify origins, not just allow all
 )
 
-@logger.catch(reraise=True)
 @app.get("/v1/models")
 def get_chat_models(
     request: Request,
