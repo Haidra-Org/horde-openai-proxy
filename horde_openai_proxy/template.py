@@ -30,6 +30,9 @@ def get_tokenizer_config(model_name: str, origin_ip: str) -> dict:
     if not os.path.exists(config_path):
         known_models = get_models(origin_ip)
         url = known_models[model_name].url
+        if url is None:
+            logger.debug(f"No known URL for {model_name}. Returning empty tokenizer.")
+            return dict()
         logger.info(f"Fetching tokenizer config for {model_name} from {url}")
         try:
             headers = {}
