@@ -119,6 +119,7 @@ def get_references():
     ).json()
 
 
+@logger.catch(reraise=True)
 @cached(TTLCache(maxsize=1, ttl=3600))
 def get_models(origin_ip) -> dict[str, Model]:
     """
