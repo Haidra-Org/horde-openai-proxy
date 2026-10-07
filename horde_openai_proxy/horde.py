@@ -44,6 +44,7 @@ def remove_stop_words(text: str, stop_sequence: List[str]) -> str:
 @logger.catch(reraise=True)
 def get_data(response: requests.Response, client_ip: str):
     if response.status_code not in (200, 202):
+        target_url = response.url 
         
         try:
             error_data = response.json()
@@ -51,7 +52,6 @@ def get_data(response: requests.Response, client_ip: str):
             errors = error_data.get("errors")
             detail = f"Error: {message}"
             # Extract the target URL that failed
-            target_url = response.url 
             if errors:
                 detail += f" - {errors}"
                 
@@ -110,7 +110,8 @@ def get_horde_completion(
                 "Proxy-Authorization": Config.horde_proxy_passkey,
             },
             json=body,
-        )
+        ),
+        client_ip = request.client.host
     )
     uuid = initial_request["id"]
 
@@ -125,7 +126,9 @@ def get_horde_completion(
                     "Proxied-For": request.origin_ip,
                     "Proxy-Authorization": Config.horde_proxy_passkey,
                 },
-            )
+            ),
+            client_ip = request.client.host
+
         )
         if not data["is_possible"]:
             data = get_data(
@@ -137,7 +140,8 @@ def get_horde_completion(
                         "Proxy-Authorization": Config.horde_proxy_passkey,
                     },
                 )
-            )
+            ),
+            client_ip = request.client.host
             raise ValueError("Request is not possible.")
 
         if data["faulted"]:
@@ -187,5 +191,6 @@ def get_horde_models() -> List[dict]:
             headers={
                 "Client-Agent": f"horde-openai-proxy:{VERSION}:db0",
             },
-        )
+        ),
+        client_ip = request.client.host
     )
