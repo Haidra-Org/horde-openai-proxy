@@ -1,6 +1,8 @@
 import time
+import jinja2
 from typing import List
 from loguru import logger
+from fastapi import HTTPException
 from .model import get_models
 from .template import apply_template, prompt_to_messages, get_tokenizer_config
 from .types import (
@@ -34,39 +36,58 @@ def openai_to_horde(
         if model_name in known_models:
             primary_model = model_name
             break
+            
     if primary_model is None:
         raise ValueError(f"Model {primary_model} not known!")
+        
     base_model = known_models[primary_model].base_model
 
     # Fetch all stop words which may be used
-    # One should not mix base_models, but if one does, at least stop works
     all_stops = set()
     for model_name in model_names:        
-        tokenizer_config = get_tokenizer_config(model_name,origin_ip)
+        tokenizer_config = get_tokenizer_config(model_name, origin_ip)
         # TODO: Set all_stops
+        
     max_available_context_length = horde_workers.get_max_context_length_for_model(primary_model)
     max_available_tokens = horde_workers.get_max_tokens_for_model(primary_model)
     if max_available_tokens > 1024:
         max_available_tokens = 1024
     if apikey == "0000000000" and max_available_tokens > 256:
         max_available_tokens = 256
+
+    # Attempt to apply the Jinja template and catch missing fields
+    try:
+        # Note: Using primary_model here to avoid leaking model_name from the for loop above
+        prompt = apply_template(request.messages, primary_model, origin_ip=origin_ip)
+    except jinja2.exceptions.UndefinedError as err:
+        # err will be something like: "'dict object' has no attribute 'content'"
+        raise HTTPException(
+            status_code=400, 
+            detail=f"The requested model's chat template requires a field that is missing from your messages: {str(err)}"
+        )
+    except jinja2.exceptions.TemplateError as err:
+        # Catch any other generic template syntax/rendering errors
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Failed to apply chat template to the provided messages: {str(err)}"
+        )
+
     return HordeRequest(
-        prompt=apply_template(request.messages, model_name,origin_ip=origin_ip),
+        prompt=prompt,
         models=model_names,
         timeout=300 if request.timeout is None else int(request.timeout),
         params=ModelGenerationInput(
             max_context_length=max_context_length if max_context_length <= max_available_context_length else max_available_context_length,
             max_length=request.max_tokens if request.max_tokens <= max_available_tokens else max_available_tokens,
             n=request.n,
-            rep_pen=request.frequency_penalty+1 if request.frequency_penalty is not None else 1.0,
-            stop_sequence=([] if request.stop is None else request.stop)
-            + list(all_stops),
+            rep_pen=request.frequency_penalty + 1 if request.frequency_penalty is not None else 1.0,
+            stop_sequence=([] if request.stop is None else request.stop) + list(all_stops),
             temperature=request.temperature,
             top_p=request.top_p,
         ),
         origin_ip=origin_ip,
     )
-
+    
 def openai_to_horde_model_response(
     request: ModelResponseRequest,
     origin_ip: str,
