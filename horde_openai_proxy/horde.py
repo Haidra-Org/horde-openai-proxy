@@ -111,7 +111,7 @@ def get_horde_completion(
             },
             json=body,
         ),
-        client_ip = request.client.host
+        client_ip = request.origin_ip
     )
     uuid = initial_request["id"]
 
@@ -127,7 +127,7 @@ def get_horde_completion(
                     "Proxy-Authorization": Config.horde_proxy_passkey,
                 },
             ),
-            client_ip = request.client.host
+            client_ip = request.origin_ip
 
         )
         if not data["is_possible"]:
@@ -141,7 +141,7 @@ def get_horde_completion(
                     },
                 )
             ),
-            client_ip = request.client.host
+            client_ip = request.origin_ip
             raise ValueError("Request is not possible.")
 
         if data["faulted"]:
@@ -176,7 +176,7 @@ def get_horde_completion(
 
 
 @logger.catch(reraise=True)
-def get_horde_models() -> List[dict]:
+def get_horde_models(origin_ip) -> List[dict]:
     """
     Get the models available on the StableHorde API.
     :return: List of models.
@@ -193,5 +193,5 @@ def get_horde_models() -> List[dict]:
                 "Client-Agent": f"horde-openai-proxy:{VERSION}:db0",
             },
         ),
-        client_ip = request.client.host
+        client_ip = origin_ip
     )

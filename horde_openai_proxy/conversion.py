@@ -28,7 +28,7 @@ def openai_to_horde(
     :return: The Horde request
     """
     model_names = [m.strip() for m in request.model.split(",")]
-    known_models = get_models()
+    known_models = get_models(origin_ip)
     primary_model = None
     for model_name in model_names:
         if model_name in known_models:
@@ -81,7 +81,7 @@ def openai_to_horde_model_response(
     :return: The Horde request
     """
     model_names = [m.strip() for m in request.model.split(",")]
-    models = get_models()
+    models = get_models(origin_ip)
     primary_model = model_names[0]
     if primary_model not in models:
         raise ValueError(f"Model {primary_model} not known!")

@@ -120,14 +120,14 @@ def get_references():
 
 
 @cached(TTLCache(maxsize=1, ttl=3600))
-def get_models() -> dict[str, Model]:
+def get_models(origin_ip) -> dict[str, Model]:
     """
     Get all models from the Horde API, with estimated sizes, base models, templates, etc.
     """
     references = get_references()
 
     models = {}
-    for model in get_horde_models():
+    for model in get_horde_models(origin_ip):
         name = model["name"]
         if "/" in name:
             model_id = name
