@@ -51,7 +51,7 @@ def openai_to_horde(
     if apikey == "0000000000" and max_available_tokens > 256:
         max_available_tokens = 256
     return HordeRequest(
-        prompt=apply_template(request.messages, model_name),
+        prompt=apply_template(request.messages, model_name,origin_ip=origin_ip),
         models=model_names,
         timeout=300 if request.timeout is None else int(request.timeout),
         params=ModelGenerationInput(

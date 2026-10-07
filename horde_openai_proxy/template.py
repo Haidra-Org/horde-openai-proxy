@@ -21,14 +21,14 @@ class GenerationConfig:
 
 @cache
 @logger.catch(reraise=True)
-def get_tokenizer_config(model_name: str) -> dict:
+def get_tokenizer_config(model_name: str, origin_ip: str) -> dict:
     config_dir = os.getenv("TOKENIZERS_CONFIG_DIR", "tokenizer_configs")
     os.makedirs(config_dir, exist_ok=True)
     config_path = os.path.join(config_dir, f"{model_name.replace('/','__')}.json")
     tokenizer_config = None
 
     if not os.path.exists(config_path):
-        known_models = get_models()
+        known_models = get_models(origin_ip)
         url = known_models[model_name].url
         logger.info(f"Fetching tokenizer config for {model_name} from {url}")
         try:
@@ -54,14 +54,14 @@ def get_tokenizer_config(model_name: str) -> dict:
     return tokenizer_config
 
 
-def apply_template(conversation: list, model: str) -> str:
+def apply_template(conversation: list, model: str, origin_ip: str) -> str:
     """
     Apply the chat template to the conversation
     :param conversation:  List of messages
     :param model: Model name on Hugging Face
     :return: Prepared prompt
     """
-    tokenizer_config = get_tokenizer_config(model)
+    tokenizer_config = get_tokenizer_config(model,origin_ip)
     format_template = tokenizer_config.get('chat_template')
     if not format_template:
         format_template = FALLBACK_ALPACA_JINJA
