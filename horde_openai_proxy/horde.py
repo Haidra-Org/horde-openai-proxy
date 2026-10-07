@@ -3,6 +3,7 @@ from json import JSONDecodeError
 from typing import List
 from loguru import logger
 import requests
+from fastapi import HTTPException
 from .consts import VERSION
 
 from .types import HordeRequest, TextGeneration
@@ -21,14 +22,22 @@ def remove_stop_words(text: str, stop_sequence: List[str]) -> str:
 
 
 def get_data(response: requests.Response):
-    if response.status_code != 200 and response.status_code != 202:
+    if response.status_code not in (200, 202):
         try:
-            message = response.json().get("message")
-            errors = response.json().get("errors")
-            raise ValueError(f"Error: {message} - {errors}")
-        except (JSONDecodeError, KeyError):
-            message = response.status_code
-            raise ValueError(f"Error: {message}")
+            error_data = response.json()
+            message = error_data.get("message")
+            errors = error_data.get("errors")
+            detail = f"Error: {message}"
+            if errors:
+                detail += f" - {errors}"
+            raise HTTPException(status_code=response.status_code, detail=detail)
+        except (requests.exceptions.JSONDecodeError, KeyError, ValueError):
+            # Fallback if the remote service didn't return valid JSON
+            raise HTTPException(
+                status_code=response.status_code, 
+                detail=f"Error: Received status code {response.status_code} from upstream"
+            )
+            
     return response.json()
 
 @logger.catch(reraise=True)
