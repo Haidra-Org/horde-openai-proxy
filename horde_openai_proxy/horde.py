@@ -175,6 +175,7 @@ def get_horde_completion(
     raise ValueError("Request timed out.")
 
 
+@logger.catch(reraise=True)
 def get_horde_models() -> List[dict]:
     """
     Get the models available on the StableHorde API.
