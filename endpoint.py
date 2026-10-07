@@ -38,6 +38,7 @@ app.add_middleware(
 
 @app.get("/v1/models")
 def get_chat_models(
+    request: Request,
     names: str = "",
     clean_names: str = "",
     base_models: str = "",
@@ -47,19 +48,21 @@ def get_chat_models(
     quant: str = "",
     backends: str = "",
 ) -> dict:
+    
     return {
         "object": "list",
         "data": filter_models(
-        set(n.strip() for n in names.split(",") if n.strip()),
-        set(n.strip() for n in clean_names.split(",") if n.strip()),
-        set(n.strip() for n in base_models.split(",") if n.strip()),
-        set(n.strip() for n in templates.split(",") if n.strip()),
-        set(n.strip() for n in backends.split(",") if n.strip()),
-        set(n.strip() for n in quant.split(",") if n.strip()),
-        min_size=min_size,
-        max_size=max_size,
-        origin_ip=request.client.host,
-    )}
+            set(n.strip() for n in names.split(",") if n.strip()),
+            set(n.strip() for n in clean_names.split(",") if n.strip()),
+            set(n.strip() for n in base_models.split(",") if n.strip()),
+            set(n.strip() for n in templates.split(",") if n.strip()),
+            set(n.strip() for n in backends.split(",") if n.strip()),
+            set(n.strip() for n in quant.split(",") if n.strip()),
+            min_size=min_size,
+            max_size=max_size,
+            origin_ip=get_origin_ip(request)
+        )
+    }
 
 @app.post("/v1/chat/completions")
 def post_chat_completion(
