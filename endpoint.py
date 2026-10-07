@@ -58,6 +58,7 @@ def get_chat_models(
         set(n.strip() for n in quant.split(",") if n.strip()),
         min_size=min_size,
         max_size=max_size,
+        origin_ip=request.client.host,
     )}
 
 @app.post("/v1/chat/completions")

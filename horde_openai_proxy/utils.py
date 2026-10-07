@@ -16,6 +16,7 @@ def filter_models(
     quant: Optional[set[str]] = None,
     min_size: float = 0,
     max_size: float = -1,
+    origin_ip: str = "unknown",
 ) -> List[Model]:
     """
     Returns a filtered list of models.
@@ -30,7 +31,7 @@ def filter_models(
     :return: A filtered list of models
     """
     filtered_models = []
-    for model in get_models().values():
+    for model in get_models(origin_ip).values():
         if names and model.name not in names:
             continue
         if clean_names and model.clean_name not in clean_names:
