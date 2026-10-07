@@ -20,16 +20,37 @@ def remove_stop_words(text: str, stop_sequence: List[str]) -> str:
         text = text.rstrip(stop_word)
     return text
 
+
+# def get_data(response: requests.Response):
+#     if response.status_code not in (200, 202):
+#         try:
+#             error_data = response.json()
+#             message = error_data.get("message")
+#             errors = error_data.get("errors")
+#             detail = f"Error: {message}"
+#             if errors:
+#                 detail += f" - {errors}"
+#             raise HTTPException(status_code=response.status_code, detail=detail)
+#         except (requests.exceptions.JSONDecodeError, KeyError, ValueError):
+#             # Fallback if the remote service didn't return valid JSON
+#             raise HTTPException(
+#                 status_code=response.status_code, 
+#                 detail=f"Error: Received status code {response.status_code} from upstream"
+#             )
+            
+#     return response.json()
+
+
 def get_data(response: requests.Response, client_ip: str):
     if response.status_code not in (200, 202):
-        # Extract the target URL that failed
-        target_url = response.url 
         
         try:
             error_data = response.json()
             message = error_data.get("message")
             errors = error_data.get("errors")
             detail = f"Error: {message}"
+            # Extract the target URL that failed
+            target_url = response.url 
             if errors:
                 detail += f" - {errors}"
                 
