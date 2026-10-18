@@ -111,7 +111,9 @@ class HordeWorkers():
   def stop(self):
     self._stop_event.set()
 
-  @cached(TTLCache(maxsize=1, ttl=30))    
+  # FastAPI calls these methods from multiple request threads. TTLCache needs
+  # a lock around lookups and mutations, including eviction and expiry.
+  @cached(TTLCache(maxsize=1, ttl=30), lock=threading.RLock())
   def get_max_tokens_for_model(self, model: str) -> int:
     """
     Get the maximum tokens for a specific model.
@@ -128,7 +130,7 @@ class HordeWorkers():
     return 120
 
 
-  @cached(TTLCache(maxsize=1, ttl=30))    
+  @cached(TTLCache(maxsize=1, ttl=30), lock=threading.RLock())
   def get_max_context_length_for_model(self, model: str) -> int:
     """
     Get the maximum context length for a specific model.

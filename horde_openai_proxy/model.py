@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from threading import RLock
 from typing import Optional
 
 import requests
@@ -111,7 +112,9 @@ class Model:
     worker_threads: int = 1
 
 
-@cached(TTLCache(maxsize=1, ttl=86400))
+# These caches are shared by FastAPI's request threads. Each cache has its own
+# lock, cachetools releases it while computing a miss (including HTTP requests).
+@cached(TTLCache(maxsize=1, ttl=86400), lock=RLock())
 def get_references():
     """The references are known models, with usually more accurate information than the guesses."""
     return requests.get(
@@ -119,7 +122,11 @@ def get_references():
     ).json()
 
 
-@cached(cache=TTLCache(maxsize=1, ttl=3600), key=lambda origin_ip: "global_models_cache")
+@cached(
+    cache=TTLCache(maxsize=1, ttl=3600),
+    key=lambda origin_ip: "global_models_cache",
+    lock=RLock(),
+)
 def get_models(origin_ip) -> dict[str, Model]:
     """
     Get all models from the Horde API, with estimated sizes, base models, templates, etc.
